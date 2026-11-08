@@ -1,0 +1,79 @@
+[
+  {
+    "day": 1,
+    "title": "7 Regras Silenciosas Que Fazem os Outros Te Respeitar",
+    "thumb_text": "PARE DE SORRIR",
+    "thumb_visual": "stickman curvado sorrindo com X vermelho vs. stickman reto com coroa dourada",
+    "length_target_min": 10,
+    "length_range": [9, 12],
+    "cta_rule_number": 7,
+    "broll_queries": ["confident walking shadow", "business handshake slow motion", "chess king close up"],
+    "status": "pending"
+  },
+  {
+    "day": 2,
+    "title": "5 Sinais de Que Alguém Está Mentindo",
+    "thumb_text": "OLHE PARA OS PÉS",
+    "thumb_visual": "stickman sorrindo, seta amarela para o pé virado para a porta",
+    "length_target_min": 10,
+    "length_range": [9, 12],
+    "cta_rule_number": 5,
+    "broll_queries": ["feet walking dark hallway", "close up eye blinking", "hands fidgeting table"],
+    "status": "pending"
+  },
+  {
+    "day": 3,
+    "title": "Como Responder a uma Falta de Respeito com Classe",
+    "thumb_text": "4 PALAVRAS APENAS",
+    "thumb_visual": "stickman gritando (ondas vermelhas) vs. stickman calmo com espelho",
+    "length_target_min": 10,
+    "length_range": [9, 12],
+    "cta_rule_number": 4,
+    "broll_queries": ["calm deep breath dark", "mirror reflection dark", "ripples on black water"],
+    "status": "pending"
+  },
+  {
+    "day": 4,
+    "title": "6 Sinais Sutis de Que um Amigo Quer Ver Você Fracassar",
+    "thumb_text": "SORRISO FALSO",
+    "thumb_visual": "dois stickmans se cumprimentando, sombra de um segura tesoura vermelha",
+    "length_target_min": 10,
+    "length_range": [9, 12],
+    "cta_rule_number": 6,
+    "broll_queries": ["shadow on wall whispers", "cutting rope scissors", "two people silhouette talking"],
+    "status": "pending"
+  },
+  {
+    "day": 5,
+    "title": "Por Que as Pessoas Só Dão Valor Quando Você Some?",
+    "thumb_text": "A LEI DO VÁCUO",
+    "thumb_visual": "4 stickmans correndo atrás de 1 que anda no sentido oposto",
+    "length_target_min": 10,
+    "length_range": [9, 12],
+    "cta_rule_number": 5,
+    "broll_queries": ["empty dark room door", "man walking away silhouette", "hourglass falling sand"],
+    "status": "pending"
+  },
+  {
+    "day": 6,
+    "title": "Como Fazer as Pessoas Gostarem de Você Sem Dizer Nada",
+    "thumb_text": "EFEITO ESPELHO",
+    "thumb_visual": "dois stickmans na mesma postura ligados por fio dourado",
+    "length_target_min": 10,
+    "length_range": [9, 12],
+    "cta_rule_number": 6,
+    "broll_queries": ["golden thread glowing dark", "two shadows synchronized", "subtle confident nod"],
+    "status": "pending"
+  },
+  {
+    "day": 7,
+    "title": "Manual Completo de Defesa Contra Manipulação (22 Min)",
+    "thumb_text": "CORTE OS FIOS",
+    "thumb_visual": "cruz de marionete vermelha no topo, stickman cortando as cordas",
+    "length_target_min": 21,
+    "length_range": [20, 22],
+    "cta_rule_number": 7,
+    "broll_queries": ["puppet strings cutting macro", "chessboard master move", "breaking chains darkness"],
+    "status": "pending"
+  }
+]

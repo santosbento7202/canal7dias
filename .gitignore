@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Secrets & OAuth
+client_secret.json
+client_secrets.json
+*.token
+*.pickle
+.env
+
+# Media rendering output (keep licenses log and metadata)
+out/dia_*/
+out/**/*.mp4
+out/**/*.wav
+out/**/*.png
+out/**/*.srt
+!out/broll_licenses.jsonl
+
+# Reference repository
+.yt-skills-ref/
+
+# OS specific
+.DS_Store
+Thumbs.db

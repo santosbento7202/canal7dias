@@ -1,0 +1,94 @@
+name: Pipeline Diario Viral - Codigo Social
+
+on:
+  schedule:
+    # Executa diariamente as 15:00 UTC (12:00 BRT - Horario de Brasilia)
+    - cron: '0 15 * * *'
+  workflow_dispatch:
+    inputs:
+      day:
+        description: 'Dia a ser executado na fila (1 a 7). Deixe vazio para proximo pendente.'
+        required: false
+        default: '1'
+      dry_run:
+        description: 'Executar em modo dry-run (sem upload real)'
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout do Repositorio
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configurar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Instalar Dependencias Python
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Validar e Baixar Fontes Abertas
+        run: |
+          python -c "
+          import urllib.request, os
+          os.makedirs('assets/fonts', exist_ok=True)
+          anton_path = 'assets/fonts/Anton-Regular.ttf'
+          if not os.path.exists(anton_path):
+              urllib.request.urlretrieve('https://raw.githubusercontent.com/google/fonts/main/ofl/anton/Anton-Regular.ttf', anton_path)
+          bebas_path = 'assets/fonts/BebasNeue-Regular.ttf'
+          if not os.path.exists(bebas_path):
+              urllib.request.urlretrieve('https://raw.githubusercontent.com/google/fonts/main/ofl/bebasneue/BebasNeue-Regular.ttf', bebas_path)
+          "
+
+      - name: Executar Pipeline do Dia
+        env:
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+        run: |
+          DAY_ARG="${{ github.event.inputs.day || '1' }}"
+          DRY_RUN_FLAG=""
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            DRY_RUN_FLAG="--dry-run"
+          fi
+          python -m src.run_day --day "$DAY_ARG" $DRY_RUN_FLAG
+
+      - name: Commit e Push das Atualizacoes de Estado
+        if: success() && github.event.inputs.dry_run != 'true'
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add config/topics_queue.json out/broll_licenses.jsonl reports/progress.md || true
+          if git diff --staged --quiet; then
+            echo "Nenhuma alteracao para commitar."
+          else
+            git commit -m "chore(pipeline): atualiza status e registros de auditoria [skip ci]"
+            git push origin HEAD
+          fi
+
+      - name: Limpeza Obrigatoria de Arquivos Temporarios de Midia
+        if: always()
+        run: |
+          echo "Limpando arquivos temporarios de renderizacao pesados..."
+          find out -type f \( -name "*.mp4" -o -name "*.wav" -o -name "*.png" -o -name "*.srt" \) -delete || true
+          echo "Limpeza concluida com sucesso."

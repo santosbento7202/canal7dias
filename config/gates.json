@@ -1,0 +1,26 @@
+{
+  "hook_min_score": 50,
+  "max_hook_retries": 3,
+  "title_max_chars": 55,
+  "title_mobile_subject_chars": 40,
+  "thumb_max_words": 4,
+  "max_tags": 15,
+  "duration_tolerance_pct": 0.15,
+  "min_chapters": 3,
+  "min_chapter_seconds": 10,
+  "shorts_per_day": 3,
+  "broll_max_time_pct": 0.30,
+  "spotlight_max_intensity": 0.55,
+  "forbidden_phrases": [
+    "no vídeo de hoje",
+    "olá pessoal",
+    "ola pessoal",
+    "sem mais delongas",
+    "em conclusão",
+    "em conclusao",
+    "resultado garantido",
+    "garantimos que",
+    "100% garantido",
+    "em 3 segundos você descobre"
+  ]
+}
