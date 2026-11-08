@@ -83,12 +83,12 @@ async def generate_edge_tts(
     text: str,
     output_audio_path: str,
     output_srt_path: str,
-    voice: str = "pt-BR-FranciscaNeural",
-    rate: str = "+0%",
-    pitch: str = "-1Hz",
+    voice: str = "pt-BR-AntonioNeural",
+    rate: str = "-1%",
+    pitch: str = "-2Hz",
     timeout_sec: float = 35.0
 ) -> bool:
-    """Invoca o edge-tts assincronamente com geração de SRT e tempos precisos."""
+    """Invoca o edge-tts assincronamente com a voz masculina oficial do Sr. Palito."""
     try:
         import edge_tts
     except ImportError:
@@ -128,24 +128,23 @@ def synthesize_speech(
     out_srt_path: str,
     dry_run: bool = False
 ) -> Tuple[bool, float]:
-    """Síntese de voz com áudio neural expressivo de estúdio (ThalitaMultilingualNeural)."""
+    """Síntese da voz masculina oficial do Sr. Palito (pt-BR-AntonioNeural)."""
     ensure_sfx()
     os.makedirs(os.path.dirname(os.path.abspath(out_audio_path)), exist_ok=True)
 
-    # 1. Tentar modelo de voz neural de alta fidelidade dramática (ThalitaMultilingualNeural)
     temp_raw = out_audio_path + ".raw.mp3"
-    candidate_voices = ["pt-BR-FranciscaNeural", "pt-BR-ThalitaMultilingualNeural"]
+    candidate_voices = ["pt-BR-AntonioNeural"]
     for voice in candidate_voices:
         for attempt in range(2):
             try:
-                success = asyncio.run(generate_edge_tts(text, temp_raw, out_srt_path, voice=voice, rate="+0%", pitch="-1Hz"))
+                success = asyncio.run(generate_edge_tts(text, temp_raw, out_srt_path, voice=voice, rate="-1%", pitch="-2Hz"))
                 if success and os.path.exists(temp_raw) and os.path.getsize(temp_raw) > 1000:
                     if remove_silence_ffmpeg(temp_raw, out_audio_path):
                         if os.path.exists(temp_raw):
                             try: os.remove(temp_raw)
                             except Exception: pass
                         dur = get_audio_duration(out_audio_path)
-                        print(f"[TTS] Voz neural dramática oficial {voice} sintetizada com sucesso ({dur:.1f}s)")
+                        print(f"[TTS] Voz masculina oficial do Sr. Palito ({voice}) sintetizada com sucesso ({dur:.1f}s)")
                         return True, dur
                     dur = get_audio_duration(temp_raw)
                     return True, dur
@@ -201,14 +200,13 @@ def generate_synthetic_audio_and_srt(text: str, out_audio: str, out_srt: str) ->
 
 
 def remove_silence_ffmpeg(input_audio: str, output_audio: str) -> bool:
-    """Aplica cadeia de masterização profissional: EQ de presença, compressão dinâmica e corte de pausas mortas."""
-    # Filtro profissional de estúdio para voz encorpada, natural e sem pausas robóticas
+    """Aplica cadeia de masterização de estúdio específica para voz masculina encorpada de autoridade."""
     af = (
-        "highpass=f=80,"
-        "bass=g=2.5:f=140,"
-        "treble=g=1.5:f=3400,"
-        "acompressor=threshold=-18dB:ratio=3.0:attack=12:release=70,"
-        "silenceremove=stop_periods=-1:stop_duration=0.25:stop_threshold=-42dB"
+        "highpass=f=75,"
+        "bass=g=3.2:f=115,"
+        "treble=g=1.5:f=3200,"
+        "acompressor=threshold=-19dB:ratio=3.2:attack=12:release=80,"
+        "silenceremove=stop_periods=-1:stop_duration=0.30:stop_threshold=-42dB"
     )
     cmd = [
         "ffmpeg", "-y",
