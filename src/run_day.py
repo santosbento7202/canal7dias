@@ -609,13 +609,121 @@ def run_pipeline_for_day(day_number: int, dry_run: bool = False) -> bool:
     return False
 
 
+def upload_existing_day_package(day_number: int) -> bool:
+    """Realiza o upload direto dos arquivos já renderizados em out/dia_N/."""
+    out_day_dir = os.path.join(PROJECT_ROOT, "out", f"dia_{day_number}")
+    long_video_path = os.path.join(out_day_dir, "video.mp4")
+    thumb_path = os.path.join(out_day_dir, "thumb.png")
+    metadata_path = os.path.join(out_day_dir, "metadata.txt")
+    shorts_dir = os.path.join(out_day_dir, "shorts")
+
+    if not (os.path.exists(long_video_path) and os.path.exists(thumb_path)):
+        print(f"[ERRO] Pacote do Dia {day_number} não encontrado em {out_day_dir}. Execute sem --upload-only primeiro.")
+        return False
+
+    queue = load_queue()
+    day_item = next((item for item in queue if item["day"] == day_number), None)
+    title = day_item.get("title", f"Vídeo Dia {day_number}") if day_item else f"Vídeo Dia {day_number}"
+
+    # Ler descrição e tags do metadata.txt se disponível
+    full_description = ""
+    tags = ["psicologia prática", "linguagem corporal", "dinâmica social", "código social", "comportamento"]
+    pinned_comment = "QUAL DESSAS SITUAÇÕES VOCÊ MAIS ENFRENTA NO DIA A DIA?\n1) Pessoas tentando te interromper no meio da fala\n2) Grosserias gratuitas disfarçadas de 'brincadeira'\nComente 1 ou 2 abaixo para o Código Social analisar sua resposta."
+
+    if os.path.exists(metadata_path):
+        try:
+            with open(metadata_path, "r", encoding="utf-8") as mf:
+                content = mf.read()
+                desc_match = re.search(r"DESCRIÇÃO COMPLETA.*?:.*?\n-{10,}\n(.*?)\n-{10,}", content, re.DOTALL)
+                if desc_match:
+                    full_description = desc_match.group(1).strip()
+                tag_match = re.search(r"TAGS DE DESAMBIGUAÇÃO:\n(.*?)\n", content)
+                if tag_match:
+                    tags = [t.strip() for t in tag_match.group(1).split(",") if t.strip()]
+        except Exception:
+            pass
+
+    if not full_description:
+        full_description = f"Assista a {title} e decodifique as regras silenciosas da mente humana."
+
+    yt_service = get_authenticated_service()
+    if not yt_service:
+        print("[ERRO] Não foi possível autenticar o serviço do YouTube.")
+        return False
+
+    print(f"\n=============================================================")
+    print(f"INICIANDO UPLOAD DIRETO PARA O YOUTUBE: DIA {day_number}")
+    print(f"=============================================================")
+
+    # Agendamento estratégico inteligente
+    is_today = (day_number == 1)
+    if is_today:
+        long_sched = calculate_schedule_time(target_hour_brt=17, target_minute_brt=0, days_ahead=0)
+        print(f"Horário de publicação do Vídeo Longo: HOJE às 17:00 BRT (UTC: {long_sched})")
+    else:
+        long_sched = calculate_schedule_time(target_hour_brt=12, target_minute_brt=0, days_ahead=1)
+        print(f"Horário de publicação do Vídeo Longo: AMANHÃ às 12:00 BRT (UTC: {long_sched})")
+
+    # Upload do vídeo longo
+    vid_id = upload_video(
+        yt_service,
+        long_video_path,
+        title,
+        full_description,
+        tags,
+        schedule_publish_at=long_sched
+    )
+
+    if not vid_id:
+        print("[ERRO] Falha ao enviar vídeo longo.")
+        return False
+
+    set_thumbnail(yt_service, vid_id, thumb_path)
+    post_pinned_comment(yt_service, vid_id, pinned_comment)
+
+    # Upload dos Shorts
+    shorts_schedule_times = (
+        [(17, 30), (19, 0), (20, 30)] if is_today else [(8, 0), (18, 0), (21, 0)]
+    )
+    days_ahead_shorts = 0 if is_today else 1
+
+    for s_idx in range(1, 4):
+        sh_path = os.path.join(shorts_dir, f"short_{s_idx}.mp4")
+        if os.path.exists(sh_path):
+            h_brt, m_brt = shorts_schedule_times[(s_idx - 1) % len(shorts_schedule_times)]
+            sh_sched = calculate_schedule_time(target_hour_brt=h_brt, target_minute_brt=m_brt, days_ahead=days_ahead_shorts)
+            sh_title = f"{title} - Regra {s_idx} #Shorts"
+            print(f"Enviando Short {s_idx} agendado para {'HOJE' if is_today else 'AMANHÃ'} às {h_brt:02d}:{m_brt:02d} BRT...")
+            sh_id = upload_video(
+                yt_service,
+                sh_path,
+                sh_title,
+                f"Assista à análise completa no canal Código Social! #Shorts #{tags[0].replace(' ', '') if tags else 'CodigoSocial'}",
+                tags,
+                schedule_publish_at=sh_sched
+            )
+            if sh_id:
+                post_pinned_comment(yt_service, sh_id, pinned_comment)
+
+    if day_item:
+        day_item["status"] = "published"
+        save_queue(queue)
+
+    print(f"\n[SUCESSO ABSOLUTO] Dia {day_number} totalmente enviado e agendado no YouTube!\n")
+    return True
+
+
 def main():
     parser = argparse.ArgumentParser(description="Executa o pipeline do dia especificado para o canal Código Social.")
     parser.add_argument("--day", type=int, default=1, help="Número do dia (1 a 7)")
     parser.add_argument("--dry-run", action="store_true", help="Execução em modo de teste sem publicar")
+    parser.add_argument("--upload-only", action="store_true", help="Faz apenas o upload e agendamento dos arquivos já gerados")
     args = parser.parse_args()
 
-    success = run_pipeline_for_day(args.day, dry_run=args.dry_run)
+    if args.upload_only:
+        success = upload_existing_day_package(args.day)
+    else:
+        success = run_pipeline_for_day(args.day, dry_run=args.dry_run)
     sys.exit(0 if success else 1)
 
 

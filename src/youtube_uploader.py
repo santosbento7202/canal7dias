@@ -25,7 +25,11 @@ try:
 except ImportError:
     pass
 
+from dotenv import load_dotenv
+load_dotenv()
+
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
 
 
 def get_authenticated_service():
@@ -51,15 +55,18 @@ def get_authenticated_service():
         return None
 
 
-def calculate_schedule_time(target_hour_brt: int, days_ahead: int = 1) -> str:
+def calculate_schedule_time(target_hour_brt: int, target_minute_brt: int = 0, days_ahead: int = 0) -> str:
     """Calcula timestamp ISO 8601 UTC para agendamento no horário de Brasília (UTC-3)."""
     brt = pytz.timezone("America/Sao_Paulo")
     now_brt = datetime.datetime.now(brt)
-    schedule_dt = now_brt.replace(hour=target_hour_brt, minute=0, second=0, microsecond=0)
-    if schedule_dt <= now_brt:
+    schedule_dt = now_brt.replace(hour=target_hour_brt, minute=target_minute_brt, second=0, microsecond=0)
+    if days_ahead > 0:
         schedule_dt += datetime.timedelta(days=days_ahead)
+    elif schedule_dt <= now_brt:
+        schedule_dt += datetime.timedelta(days=1)
     # Converter para UTC com formato Z
     utc_dt = schedule_dt.astimezone(pytz.utc)
+    return utc_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
     return utc_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
