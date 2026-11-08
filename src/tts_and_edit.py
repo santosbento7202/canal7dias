@@ -83,10 +83,10 @@ async def generate_edge_tts(
     text: str,
     output_audio_path: str,
     output_srt_path: str,
-    voice: str = "pt-BR-ThalitaMultilingualNeural",
+    voice: str = "pt-BR-FranciscaNeural",
     rate: str = "+0%",
     pitch: str = "-1Hz",
-    timeout_sec: float = 180.0
+    timeout_sec: float = 35.0
 ) -> bool:
     """Invoca o edge-tts assincronamente com geração de SRT e tempos precisos."""
     try:
@@ -134,7 +134,7 @@ def synthesize_speech(
 
     # 1. Tentar modelo de voz neural de alta fidelidade dramática (ThalitaMultilingualNeural)
     temp_raw = out_audio_path + ".raw.mp3"
-    candidate_voices = ["pt-BR-ThalitaMultilingualNeural", "pt-BR-FranciscaNeural"]
+    candidate_voices = ["pt-BR-FranciscaNeural", "pt-BR-ThalitaMultilingualNeural"]
     for voice in candidate_voices:
         for attempt in range(2):
             try:

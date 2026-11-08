@@ -151,25 +151,79 @@ class ShortsGenerator:
                 self.render_short_frame(cap, pose, expr, col, frame_png, acc)
                 scene_imgs.append(frame_png)
 
-        # 4. Montar vídeo vertical com Ken Burns zoompan dinâmico e legendas
-        dur_per_scene = dur / len(scene_imgs)
+        # 4. Intercalar Narrador e Clipes de Situações/Filmes
+        from src.gif_situations import search_and_download_gif_clip
+        short_situation_map = {
+            1: ("napoleon angry", "napoleon_screaming"),
+            2: ("samurai sword duel", "musashi_samurai_duel"),
+            3: ("roman emperor", "julius_caesar_power")
+        }
+        sit_info = short_situation_map.get(short_num)
+        sit_clip_path = None
+        if sit_info:
+            sit_clip_path = search_and_download_gif_clip(sit_info[0], sit_info[1], 1080, 1920, 8.0)
+
         anim_vertical_clips = []
-        for idx, spath in enumerate(scene_imgs):
-            anim_clip_path = os.path.join(short_dir, f"anim_vert_{idx+1}.mp4")
-            frames = int(dur_per_scene * 30)
-            cmd_anim = [
-                "ffmpeg", "-y",
-                "-i", spath,
-                "-vf", f"scale=1080:1920,zoompan=z='min(zoom+0.0008,1.06)':d={frames}:s=1080x1920:fps=30",
-                "-t", f"{dur_per_scene:.3f}",
+        if sit_clip_path and os.path.exists(sit_clip_path):
+            narr_dur_1 = min(4.0, dur * 0.25)
+            sit_dur = max(4.0, dur * 0.50)
+            narr_dur_2 = max(3.0, dur - narr_dur_1 - sit_dur)
+
+            # A. Narrador Abertura
+            anim_n1 = os.path.join(short_dir, "anim_narr_1.mp4")
+            frames_n1 = int(narr_dur_1 * 30)
+            cmd_n1 = [
+                "ffmpeg", "-y", "-i", scene_imgs[0],
+                "-vf", f"scale=1080:1920,zoompan=z='min(zoom+0.0008,1.06)':d={frames_n1}:s=1080x1920:fps=30",
+                "-t", f"{narr_dur_1:.3f}",
                 "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
-                anim_clip_path
+                anim_n1
             ]
-            res = subprocess.run(cmd_anim, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            if res.returncode == 0 and os.path.exists(anim_clip_path):
-                anim_vertical_clips.append(anim_clip_path)
-            else:
-                anim_vertical_clips.append(spath)
+            subprocess.run(cmd_n1, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if os.path.exists(anim_n1): anim_vertical_clips.append(anim_n1)
+
+            # B. Clipe do Filme/Situação Real
+            sit_vert = os.path.join(short_dir, "sit_vert.mp4")
+            cmd_sv = [
+                "ffmpeg", "-y", "-stream_loop", "3", "-i", sit_clip_path,
+                "-t", f"{sit_dur:.3f}",
+                "-vf", "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30",
+                "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                sit_vert
+            ]
+            subprocess.run(cmd_sv, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if os.path.exists(sit_vert): anim_vertical_clips.append(sit_vert)
+
+            # C. Narrador Fechamento
+            anim_n2 = os.path.join(short_dir, "anim_narr_2.mp4")
+            frames_n2 = int(narr_dur_2 * 30)
+            cmd_n2 = [
+                "ffmpeg", "-y", "-i", scene_imgs[-1],
+                "-vf", f"scale=1080:1920,zoompan=z='min(zoom+0.0008,1.06)':d={frames_n2}:s=1080x1920:fps=30",
+                "-t", f"{narr_dur_2:.3f}",
+                "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                anim_n2
+            ]
+            subprocess.run(cmd_n2, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if os.path.exists(anim_n2): anim_vertical_clips.append(anim_n2)
+        else:
+            dur_per_scene = dur / len(scene_imgs)
+            for idx, spath in enumerate(scene_imgs):
+                anim_clip_path = os.path.join(short_dir, f"anim_vert_{idx+1}.mp4")
+                frames = int(dur_per_scene * 30)
+                cmd_anim = [
+                    "ffmpeg", "-y",
+                    "-i", spath,
+                    "-vf", f"scale=1080:1920,zoompan=z='min(zoom+0.0008,1.06)':d={frames}:s=1080x1920:fps=30",
+                    "-t", f"{dur_per_scene:.3f}",
+                    "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                    anim_clip_path
+                ]
+                res = subprocess.run(cmd_anim, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                if res.returncode == 0 and os.path.exists(anim_clip_path):
+                    anim_vertical_clips.append(anim_clip_path)
+                else:
+                    anim_vertical_clips.append(spath)
 
         concat_txt = os.path.join(short_dir, "concat.txt")
         with open(concat_txt, "w") as f:

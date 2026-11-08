@@ -325,6 +325,8 @@ def get_deterministic_script(day_info: Dict[str, Any]) -> Dict[str, Any]:
                     "narration": sc["narration_part"],
                     "visual": sc.get("art_asset", ""),
                     "art_asset": sc.get("art_asset", ""),
+                    "situation_query": sc.get("situation_query", ""),
+                    "situation_name": sc.get("situation_name", ""),
                     "fig_pose": "confident",
                     "fig_expression": "calm",
                     "caption": sc["title_card"],
