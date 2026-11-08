@@ -182,15 +182,33 @@ class ShortsGenerator:
             subprocess.run(cmd_n1, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             if os.path.exists(anim_n1): anim_vertical_clips.append(anim_n1)
 
-            # B. Clipe do Filme/Situação Real
-            sit_vert = os.path.join(short_dir, "sit_vert.mp4")
-            cmd_sv = [
-                "ffmpeg", "-y", "-stream_loop", "3", "-i", sit_clip_path,
-                "-t", f"{sit_dur:.3f}",
-                "-vf", "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30",
-                "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
-                sit_vert
+            # B. Clipe do Filme/Situação Real com Sr. Palito fixo no canto (Badge Narrador PiP)
+            badge_files = [
+                "narrator_badge_thinking.png",
+                "narrator_badge_official.png",
+                "narrator_badge_power.png"
             ]
+            badge_name = badge_files[(short_num - 1) % len(badge_files)]
+            badge_path = os.path.join(PROJECT_ROOT, "assets", "branding", badge_name)
+
+            sit_vert = os.path.join(short_dir, "sit_vert.mp4")
+            if os.path.exists(badge_path):
+                cmd_sv = [
+                    "ffmpeg", "-y", "-stream_loop", "3", "-i", sit_clip_path, "-i", badge_path,
+                    "-t", f"{sit_dur:.3f}",
+                    "-filter_complex", "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30[bg];[1:v]scale=250:250[badge];[bg][badge]overlay=W-w-40:H-h-260[v_out]",
+                    "-map", "[v_out]",
+                    "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                    sit_vert
+                ]
+            else:
+                cmd_sv = [
+                    "ffmpeg", "-y", "-stream_loop", "3", "-i", sit_clip_path,
+                    "-t", f"{sit_dur:.3f}",
+                    "-vf", "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30",
+                    "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                    sit_vert
+                ]
             subprocess.run(cmd_sv, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             if os.path.exists(sit_vert): anim_vertical_clips.append(sit_vert)
 

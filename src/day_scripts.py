@@ -1,7 +1,10 @@
-"""src/day_scripts.py - Roteiros baseados em histórias reais fascinantes e ensinamentos psicológicos contra-intuitivos.
+"""src/day_scripts.py - Roteiro aprofundado com narrativas históricas de alto impacto e psicologia profunda.
 
 Canal: Código Social
-Estilo: Storytelling de poder, história e psicologia profunda (estilo Aperture / 48 Leis do Poder).
+Estrutura:
+- Início: Sr. Palito FULL SCREEN (abertura magnética).
+- Desenvolvimento: Cenas de filmes e situações reais em tela cheia com Sr. Palito no CANTINHO (badge circular neon).
+- Encerramento: Sr. Palito FULL SCREEN (conclusão de poder).
 """
 
 from typing import Any, Dict
@@ -12,112 +15,120 @@ DAY_SCRIPTS = {
         "thumb_text": "O PODER DO SILÊNCIO",
         "hook_formula": "The Story",
         "full_narration": (
-            "Em 1808, Napoleão Bonaparte — o imperador mais temido do planeta — perdeu completamente a cabeça. "
-            "No palácio das Tulherias, diante de generais e diplomatas, Napoleão gritou, ameaçou e berrou durante duas horas seguidas contra Charles Talleyrand, seu próprio ministro. "
-            "Sabe o que Talleyrand fez enquanto o homem mais poderoso da Europa espumava de raiva a centímetros do seu rosto? "
-            "Absolutamente nada. Ele não piscou. Não cruzou os braços. Não tentou se justificar. Sustentou o olhar com uma calma quase sobrenatural. "
-            "Quando Napoleão bateu a porta e saiu ensandecido, Talleyrand ajeitou suavemente o paletó, olhou para os nobres na sala e sussurrou apenas uma frase: "
+            "O maior erro que um homem comete em um confronto é abrir a boca para se defender. "
+            "Em 1808, Napoleão Bonaparte — no auge de sua conquista militar sobre a Europa — perdeu completamente o controle no palácio das Tulherias. "
+            "Diante de ministros, embaixadores e generais, o imperador gritou, ameaçou de morte e berrou insultos viscerais durante duas horas seguidas contra Charles-Maurice de Talleyrand, seu próprio diplomata. "
+            "Sabe o que Talleyrand fez enquanto o homem mais temido do planeta espumava de cólera a centímetros do seu rosto? "
+            "Absolutamente nada. Ele não piscou. Não cruzou os braços em postura defensiva. Não pronunciou uma única sílaba. Sustentou o olhar com uma frieza quase desumana. "
+            "Quando Napoleão bateu a porta e saiu ensandecido pelo próprio ódio, Talleyrand ajeitou com calma o terno, olhou para os nobres na sala e sussurrou apenas uma frase: "
             "Que pena ver um homem tão grande ser tão mal educado. "
-            "Naquele instante, toda a corte compreendeu: quem perde o controle entrega o poder; quem permanece sereno domina o tabuleiro.\n\n"
-            "Séculos antes, no Japão feudal, o lendário samurai Miyamoto Musashi usava exatamente a mesma arma psicológica. "
-            "No duelo mais perigoso da sua vida contra Sasaki Kojiro, Musashi chegou três horas atrasado de propósito. "
-            "Ele sabia que a pressa e a irritação destroem o discernimento humano. "
-            "Quando Kojiro desembainhou a espada enfurecido pela espera, a mente dele já pertencia a Musashi antes mesmo do primeiro golpe.\n\n"
-            "Agora traga essa sabedoria para a sua vida hoje. Aqui estão os três ensinamentos secretos dessa dinâmica.\n\n"
-            "Primeiro: O efeito vácuo social. Quando alguém te faz uma ofensa ou provocação, a sua biologia quer reagir no reflexo. Não caia nessa armadilha. "
-            "Faça uma pausa de três segundos olhando fixamente nos olhos do outro. O silêncio cria um vácuo psicológico insuportável, forçando quem te atacou a engolir a própria insegurança diante de todos.\n\n"
-            "Segundo: A inversão de status de Júlio César. Quando foi capturado por piratas na juventude, eles pediram vinte talentos de ouro pelo resgate. "
-            "César riu na cara deles, disse que não sabiam quem tinham capturado e exigiu que cobrassem cinquenta. "
-            "Ao se recusar a agir como vítima, César inverteu instantaneamente a hierarquia psicológica e passou a dar ordens aos próprios captores.\n\n"
-            "Terceiro: A lei da não-reatividade. Toda vez que você se ofende com as palavras de alguém, você entrega a chave do seu cérebro para essa pessoa te controlar. "
-            "Quem não reage, não pode ser manipulado.\n\n"
-            "O Sr. Palito não grita, não discute e não tenta provar nada. Ele apenas observa enquanto os outros se destroem com o próprio ego. "
-            "Se você compreendeu o poder brutal do silêncio estratégico, comente Eu controlo minhas reações e inscreva-se no Código Social para o próximo capítulo."
+            "Naquele instante, a corte inteira compreendeu: Napoleão tinha o exército, mas Talleyrand era o verdadeiro dono do poder. "
+            "Quem perde a calma se torna um espetáculo público; quem domina o silêncio reina sobre a sala.\n\n"
+            "Essa mesma estratégia foi usada no Japão feudal pelo lendário samurai Miyamoto Musashi. "
+            "No duelo decisivo na ilha de Ganryu contra Sasaki Kojiro — considerado o duelista mais rápido do império —, Musashi chegou três horas atrasado de propósito. "
+            "Ele desceu do barco descalço, esculpindo um remo de madeira como espada. "
+            "Quando Kojiro arremessou a bainha na água cego de fúria pela espera, Musashi disse calmamente: Você acabou de perder a sua espada. "
+            "Kojiro atacou no desespero da raiva e foi abatido em um único golpe. "
+            "Musashi venceu o duelo antes da primeira gota de sangue, porque quem tem pressa entrega a própria mente ao adversário.\n\n"
+            "Agora entenda a neurociência por trás disso. Quando alguém tenta te desestabilizar com uma ofensa ou provocação, o cérebro do agressor espera a sua reação para justificar o ataque. "
+            "Aqui estão os três códigos práticos para dominar qualquer confronto social:\n\n"
+            "Primeiro: O vácuo dos três segundos. Ao ser provocado, não responda no reflexo. Conte três segundos em silêncio absoluto sustentando o olhar. "
+            "A natureza humana odeia o vácuo. Esse silêncio desconcertante faz o agressor engolir a própria insegurança diante de todos.\n\n"
+            "Segundo: A inversão de status de Júlio César. Capturado por piratas cilícios que pediram vinte talentos pelo seu resgate, César riu e exigiu que cobrassem cinquenta, passando a dar ordens aos próprios sequestradores. "
+            "Nunca aja como vítima. Quem não aceita a posição de inferioridade destrói a hierarquia do agressor.\n\n"
+            "Terceiro: A lei da não-reatividade. Se uma ofensa te atinge, você concedeu ao outro o controle remoto das suas emoções. Quem não reage não pode ser manipulado.\n\n"
+            "O Sr. Palito nunca discute, não levanta a voz e não tenta convencer tolos. Ele apenas observa o tabuleiro enquanto os outros se destroem com o próprio ego. "
+            "Se você entendeu que a calma é a maior arma de poder, comente Eu controlo minhas reações e inscreva-se no Código Social para o próximo nível."
         ),
         "scenes": [
             {
                 "scene_num": 1,
-                "title_card": "O ATAQUE DE NAPOLEÃO",
+                "title_card": "O HOMEM QUE DOBROU NAPOLEÃO",
+                "layout_mode": "fullscreen_narrator",
                 "art_asset": "assets/branding/sr_palito_thinking.jpg",
-                "situation_query": "napoleon angry",
-                "situation_name": "napoleon_screaming",
-                "narration_part": "Em 1808, Napoleão Bonaparte — o imperador mais temido do planeta — perdeu completamente a cabeça. No palácio das Tulherias, diante de generais e diplomatas, Napoleão gritou, ameaçou e berrou durante duas horas seguidas contra Charles Talleyrand, seu próprio ministro."
+                "narration_part": "O maior erro que um homem comete em um confronto é abrir a boca para se defender. Em 1808, Napoleão Bonaparte — no auge de sua conquista militar sobre a Europa — perdeu completamente o controle no palácio das Tulherias."
             },
             {
                 "scene_num": 2,
-                "title_card": "A CALMA SOBRENATURAL",
-                "art_asset": "assets/branding/sr_palito_official.jpg",
-                "situation_query": "peaky blinders calm stare",
-                "situation_name": "talleyrand_calm_stare",
-                "narration_part": "Sabe o que Talleyrand fez enquanto o homem mais poderoso da Europa espumava de raiva a centímetros do seu rosto? Absolutamente nada. Ele não piscou. Não cruzou os braços. Não tentou se justificar. Sustentou o olhar com uma calma quase sobrenatural."
+                "title_card": "A FÚRIA DO IMPERADOR",
+                "layout_mode": "corner_narrator",
+                "badge_asset": "assets/branding/narrator_badge_thinking.png",
+                "primary_clip": "assets/broll_cache/napoleon_screaming.mp4",
+                "secondary_clip": "assets/broll_cache/napoleon_battle_anger.mp4",
+                "narration_part": "Diante de ministros, embaixadores e generais, o imperador gritou, ameaçou de morte e berrou insultos viscerais durante duas horas seguidas contra Charles-Maurice de Talleyrand, seu próprio diplomata."
             },
             {
                 "scene_num": 3,
-                "title_card": "QUEM GRITA PERDE O PODER",
-                "art_asset": "assets/branding/sr_palito_pointing.jpg",
-                "situation_query": "gentleman suit smirk",
-                "situation_name": "talleyrand_smirk",
-                "narration_part": "Quando Napoleão bateu a porta e saiu ensandecido, Talleyrand ajeitou suavemente o paletó, olhou para os nobres na sala e sussurrou apenas uma frase: Que pena ver um homem tão grande ser tão mal educado. Naquele instante, toda a corte compreendeu: quem perde o controle entrega o poder; quem permanece sereno domina o tabuleiro."
+                "title_card": "A CALMA DESUMANA",
+                "layout_mode": "corner_narrator",
+                "badge_asset": "assets/branding/narrator_badge_official.png",
+                "primary_clip": "assets/broll_cache/talleyrand_calm_stare.mp4",
+                "secondary_clip": "assets/broll_cache/peaky_meeting_silence.mp4",
+                "narration_part": "Sabe o que Talleyrand fez enquanto o homem mais temido do planeta espumava de cólera a centímetros do seu rosto? Absolutamente nada. Ele não piscou. Não cruzou os braços em postura defensiva. Não pronunciou uma única sílaba. Sustentou o olhar com uma frieza quase desumana."
             },
             {
                 "scene_num": 4,
-                "title_card": "A ESTRATÉGIA DE MUSASHI",
-                "art_asset": "assets/branding/sr_palito_official_fullbody.jpg",
-                "situation_query": "samurai sword duel",
-                "situation_name": "musashi_samurai_duel",
-                "narration_part": "Séculos antes, no Japão feudal, o lendário samurai Miyamoto Musashi usava exatamente a mesma arma psicológica. No duelo mais perigoso da sua vida contra Sasaki Kojiro, Musashi chegou três horas atrasado de propósito. Ele sabia que a pressa e a irritação destroem o discernimento humano. Quando Kojiro desembainhou a espada enfurecido pela espera, a mente dele já pertencia a Musashi antes mesmo do primeiro golpe."
+                "title_card": "QUEM GRITA ENTREGA O PODER",
+                "layout_mode": "corner_narrator",
+                "badge_asset": "assets/branding/narrator_badge_pointing.png",
+                "primary_clip": "assets/broll_cache/talleyrand_smirk.mp4",
+                "secondary_clip": "assets/broll_cache/walking_calm.mp4",
+                "narration_part": "Quando Napoleão bateu a porta e saiu ensandecido pelo próprio ódio, Talleyrand ajeitou com calma o terno, olhou para os nobres na sala e sussurrou apenas uma frase: Que pena ver um homem tão grande ser tão mal educado. Naquele instante, a corte inteira compreendeu: Napoleão tinha o exército, mas Talleyrand era o verdadeiro dono do poder. Quem perde a calma se torna um espetáculo público; quem domina o silêncio reina sobre a sala."
             },
             {
                 "scene_num": 5,
-                "title_card": "1. O EFEITO VÁCUO SOCIAL",
-                "art_asset": "assets/branding/sr_palito_thinking.jpg",
-                "situation_query": "intense eye contact meeting",
-                "situation_name": "vacuum_eye_stare",
-                "narration_part": "Agora traga essa sabedoria para a sua vida hoje. Primeiro: O efeito vácuo social. Quando alguém te faz uma ofensa ou provocação, a sua biologia quer reagir no reflexo. Não caia nessa armadilha. Faça uma pausa de três segundos olhando fixamente nos olhos do outro. O silêncio cria um vácuo psicológico insuportável, forçando quem te atacou a engolir a própria insegurança diante de todos."
+                "title_card": "A ESTRATÉGIA DE MUSASHI",
+                "layout_mode": "corner_narrator",
+                "badge_asset": "assets/branding/narrator_badge_thinking.png",
+                "primary_clip": "assets/broll_cache/musashi_samurai_duel.mp4",
+                "secondary_clip": "assets/broll_cache/samurai_strike_fast.mp4",
+                "narration_part": "Essa mesma estratégia foi usada no Japão feudal pelo lendário samurai Miyamoto Musashi. No duelo decisivo na ilha de Ganryu contra Sasaki Kojiro — considerado o duelista mais rápido do império —, Musashi chegou três horas atrasado de propósito. Ele desceu do barco descalço, esculpindo um remo de madeira como espada. Quando Kojiro arremessou a bainha na água cego de fúria pela espera, Musashi disse calmamente: Você acabou de perder a sua espada. Kojiro atacou no desespero da raiva e foi abatido em um único golpe. Musashi venceu o duelo antes da primeira gota de sangue, porque quem tem pressa entrega a própria mente ao adversário."
             },
             {
                 "scene_num": 6,
-                "title_card": "2. A LIÇÃO DE CÉSAR",
-                "art_asset": "assets/branding/sr_palito_power.jpg",
-                "situation_query": "roman emperor",
-                "situation_name": "julius_caesar_power",
-                "narration_part": "Segundo: A inversão de status de Júlio César. Quando foi capturado por piratas na juventude, eles pediram vinte talentos de ouro pelo resgate. César riu na cara deles, disse que não sabiam quem tinham capturado e exigiu que cobrassem cinquenta. Ao se recusar a agir como vítima, César inverteu instantaneamente a hierarquia psicológica e passou a dar ordens aos próprios captores."
+                "title_card": "1. O VÁCUO DOS 3 SEGUNDOS",
+                "layout_mode": "corner_narrator",
+                "badge_asset": "assets/branding/narrator_badge_pointing.png",
+                "primary_clip": "assets/broll_cache/vacuum_eye_stare.mp4",
+                "secondary_clip": "assets/broll_cache/peaky_meeting_silence.mp4",
+                "narration_part": "Agora entenda a neurociência por trás disso. Quando alguém tenta te desestabilizar com uma ofensa ou provocação, o cérebro do agressor espera a sua reação para justificar o ataque. Primeiro: O vácuo dos três segundos. Ao ser provocado, não responda no reflexo. Conte três segundos em silêncio absoluto sustentando o olhar. A natureza humana odeia o vácuo. Esse silêncio desconcertante faz o agressor engolir a própria insegurança diante de todos."
             },
             {
                 "scene_num": 7,
-                "title_card": "3. A LEI DA NÃO-REATIVIDADE",
-                "art_asset": "assets/branding/sr_palito_pointing.jpg",
-                "situation_query": "godfather michael corleone calm",
-                "situation_name": "godfather_calm",
-                "narration_part": "Terceiro: A lei da não-reatividade. Toda vez que você se ofende com as palavras de alguém, você entrega a chave do seu cérebro para essa pessoa te controlar. Quem não reage, não pode ser manipulado."
+                "title_card": "2. A LIÇÃO DE JÚLIO CÉSAR",
+                "layout_mode": "corner_narrator",
+                "badge_asset": "assets/branding/narrator_badge_power.png",
+                "primary_clip": "assets/broll_cache/julius_caesar_power.mp4",
+                "secondary_clip": "assets/broll_cache/roman_legions_march.mp4",
+                "narration_part": "Segundo: A inversão de status de Júlio César. Capturado por piratas cilícios que pediram vinte talentos pelo seu resgate, César riu e exigiu que cobrassem cinquenta, passando a dar ordens aos próprios sequestradores. Nunca aja como vítima. Quem não aceita a posição de inferioridade destrói a hierarquia do agressor."
             },
             {
                 "scene_num": 8,
-                "title_card": "DOMINE O TABULEIRO",
-                "art_asset": "assets/branding/sr_palito_power.jpg",
-                "situation_query": "chess mastermind move",
-                "situation_name": "chess_board_strategy",
-                "narration_part": "O Sr. Palito não grita, não discute e não tenta provar nada. Ele apenas observa enquanto os outros se destroem com o próprio ego."
+                "title_card": "3. A LEI DA NÃO-REATIVIDADE",
+                "layout_mode": "corner_narrator",
+                "badge_asset": "assets/branding/narrator_badge_official.png",
+                "primary_clip": "assets/broll_cache/godfather_calm.mp4",
+                "secondary_clip": "assets/broll_cache/chess_checkmate_drama.mp4",
+                "narration_part": "Terceiro: A lei da não-reatividade. Se uma ofensa te atinge, você concedeu ao outro o controle remoto das suas emoções. Quem não reage não pode ser manipulado. O Sr. Palito nunca discute, não levanta a voz e não tenta convencer tolos. Ele apenas observa o tabuleiro enquanto os outros se destroem com o próprio ego."
             },
             {
                 "scene_num": 9,
-                "title_card": "CÓDIGO SOCIAL ATIVADO",
-                "art_asset": "assets/branding/sr_palito_official_fullbody.jpg",
-                "situation_query": "standing calm walk away",
-                "situation_name": "walking_calm",
-                "narration_part": "Se você compreendeu o poder brutal do silêncio estratégico, comente Eu controlo minhas reações e inscreva-se no Código Social para o próximo capítulo."
+                "title_card": "DOMINE O TABULEIRO",
+                "layout_mode": "fullscreen_narrator",
+                "art_asset": "assets/branding/sr_palito_power.jpg",
+                "narration_part": "Se você entendeu que a calma é a maior arma de poder, comente Eu controlo minhas reações e inscreva-se no Código Social para o próximo nível."
             }
         ],
         "chapters": [
-            {"time": "0:00", "title": "O Ataque de Fúria de Napoleão"},
-            {"time": "0:25", "title": "A Calma Sobrenatural de Talleyrand"},
-            {"time": "0:48", "title": "A Frase que Destruiu o Imperador"},
-            {"time": "1:10", "title": "A Estratégia Psicológica de Musashi"},
-            {"time": "1:35", "title": "Regra 1: O Efeito Vácuo Social"},
-            {"time": "1:58", "title": "Regra 2: A Lição de Júlio César"},
-            {"time": "2:18", "title": "Regra 3: A Lei da Não-Reatividade"},
-            {"time": "2:36", "title": "Como o Sr. Palito Domina o Jogo"},
-            {"time": "2:52", "title": "Encerramento e Próximo Código"}
+            {"time": "0:00", "title": "O Maior Erro no Confronto"},
+            {"time": "0:25", "title": "A Fúria de Napoleão no Palácio"},
+            {"time": "0:48", "title": "A Calma Desumana de Talleyrand"},
+            {"time": "1:15", "title": "A Frase que Virou a História"},
+            {"time": "1:42", "title": "A Estratégia de Miyamoto Musashi"},
+            {"time": "2:15", "title": "Protocolo 1: O Vácuo dos 3 Segundos"},
+            {"time": "2:38", "title": "Protocolo 2: A Lição de Júlio César"},
+            {"time": "2:58", "title": "Protocolo 3: A Lei da Não-Reatividade"},
+            {"time": "3:18", "title": "Encerramento e Ativação do Código"}
         ],
         "shorts_stories": [
             {

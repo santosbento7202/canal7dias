@@ -319,20 +319,16 @@ def get_deterministic_script(day_info: Dict[str, Any]) -> Dict[str, Any]:
             curated = DAY_SCRIPTS[day]
             scenes_data = []
             for sc in curated["scenes"]:
-                scenes_data.append({
-                    "scene_num": sc["scene_num"],
-                    "duration_sec": 18,
-                    "narration": sc["narration_part"],
-                    "visual": sc.get("art_asset", ""),
-                    "art_asset": sc.get("art_asset", ""),
-                    "situation_query": sc.get("situation_query", ""),
-                    "situation_name": sc.get("situation_name", ""),
-                    "fig_pose": "confident",
-                    "fig_expression": "calm",
-                    "caption": sc["title_card"],
-                    "broll_query": day_info["broll_queries"][0],
-                    "broll_mode": "cutaway"
-                })
+                item = dict(sc)
+                item["duration_sec"] = item.get("duration_sec", 18)
+                item["narration"] = sc.get("narration_part", item.get("narration", ""))
+                item["visual"] = sc.get("art_asset", item.get("visual", ""))
+                item["caption"] = sc.get("title_card", item.get("caption", ""))
+                item["fig_pose"] = item.get("fig_pose", "confident")
+                item["fig_expression"] = item.get("fig_expression", "calm")
+                item["broll_query"] = day_info["broll_queries"][0] if day_info.get("broll_queries") else ""
+                item["broll_mode"] = "cutaway"
+                scenes_data.append(item)
             pinned_comments = {
                 1: "Qual dessas regras você já aplicou na prática e sentiu a mudança imediata no tratamento das pessoas? Comente abaixo.",
                 2: "Você já pegou alguém mentindo na sua frente apenas observando a direção dos pés ou o corpo? Conte sua experiência.",

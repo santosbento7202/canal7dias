@@ -86,7 +86,7 @@ async def generate_edge_tts(
     voice: str = "pt-BR-AntonioNeural",
     rate: str = "-1%",
     pitch: str = "-2Hz",
-    timeout_sec: float = 35.0
+    timeout_sec: float = 120.0
 ) -> bool:
     """Invoca o edge-tts assincronamente com a voz masculina oficial do Sr. Palito."""
     try:

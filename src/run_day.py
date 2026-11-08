@@ -102,68 +102,126 @@ def assemble_video_ffmpeg(
     output_mp4: str,
     total_duration: float,
     ass_subtitle_name: Optional[str] = "transcript.ass",
-    situation_clips: Optional[List[Optional[str]]] = None
+    situation_clips: Optional[List[Optional[str]]] = None,
+    scenes_data: Optional[List[Dict[str, Any]]] = None
 ) -> bool:
-    """Monta vídeo cinematográfico 1920x1080 intercalando Narrador (Sr. Palito) e filmes/situações reais com legendas ASS."""
+    """Monta vídeo cinematográfico 1920x1080:
+    - Início e Fim: Sr. Palito FULL SCREEN em apresentação de autoridade.
+    - Meio do vídeo: Cenas reais e filmes em tela cheia com Sr. Palito fixo no canto inferior (Picture-in-Picture)
+      e cortes dinâmicos a cada ~4-6 segundos.
+    - Legendas cinéticas ASS e mixagem com dark ambient drone.
+    """
     work_dir = os.path.dirname(output_mp4)
     n_scenes = len(scene_images)
     dur_per_scene = total_duration / max(1, n_scenes)
 
-    # 1. Intercalar Narrador (Sr. Palito) com clipe dinâmico do filme/situação
     animated_video_clips = []
     for i, img_path in enumerate(scene_images):
-        sit_clip = situation_clips[i] if situation_clips and i < len(situation_clips) else None
+        s_info = scenes_data[i] if scenes_data and i < len(scenes_data) else {}
+        is_fullscreen = (i == 0) or (i == n_scenes - 1) or (s_info.get("layout_mode") == "fullscreen_narrator")
 
-        if sit_clip and os.path.exists(sit_clip):
-            narrator_dur = min(4.5, max(2.5, dur_per_scene * 0.40))
-            situation_dur = max(2.5, dur_per_scene - narrator_dur)
-
-            # A. Bloco do Narrador (Sr. Palito com zoom sutil)
-            anim_narr = os.path.join(work_dir, f"anim_narr_{i+1}.mp4")
-            frames_narr = int(narrator_dur * 30)
-            cmd_narr = [
-                "ffmpeg", "-y", "-i", img_path,
-                "-vf", f"scale=1920:1080,zoompan=z='min(zoom+0.0008,1.05)':d={frames_narr}:s=1920x1080:fps=30",
-                "-t", f"{narrator_dur:.3f}",
-                "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
-                anim_narr
-            ]
-            subprocess.run(cmd_narr, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            if os.path.exists(anim_narr):
-                animated_video_clips.append(anim_narr)
-
-            # B. Bloco do Filme/Situação Real (GIF / cena real de alta relevância)
-            sit_trimmed = os.path.join(work_dir, f"sit_trimmed_{i+1}.mp4")
-            cmd_sit = [
-                "ffmpeg", "-y", "-stream_loop", "3", "-i", sit_clip,
-                "-t", f"{situation_dur:.3f}",
-                "-vf", "scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,fps=30",
-                "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
-                sit_trimmed
-            ]
-            subprocess.run(cmd_sit, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            if os.path.exists(sit_trimmed):
-                animated_video_clips.append(sit_trimmed)
-            elif os.path.exists(anim_narr):
-                animated_video_clips.append(anim_narr)
-        else:
-            anim_path = os.path.join(work_dir, f"anim_scene_{i+1}.mp4")
+        if is_fullscreen:
+            # 1. Sr. Palito FULL SCREEN (Início e Fim da Narrativa)
+            anim_path = os.path.join(work_dir, f"anim_full_scene_{i+1}.mp4")
             frames = int(dur_per_scene * 30)
             cmd_anim = [
                 "ffmpeg", "-y",
                 "-i", img_path,
-                "-vf", f"scale=1920:1080,zoompan=z='min(zoom+0.0008,1.06)':d={frames}:s=1920x1080:fps=30",
+                "-vf", f"scale=1920:1080,zoompan=z='min(zoom+0.0006,1.06)':d={frames}:s=1920x1080:fps=30",
                 "-t", f"{dur_per_scene:.3f}",
                 "-c:v", "libx264",
                 "-preset", "veryfast",
                 "-pix_fmt", "yuv420p",
                 anim_path
             ]
-            subprocess.run(cmd_anim, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            if os.path.exists(anim_path):
+            res = subprocess.run(cmd_anim, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if res.returncode == 0 and os.path.exists(anim_path):
                 animated_video_clips.append(anim_path)
             else:
                 animated_video_clips.append(img_path)
+        else:
+            # 2. Meio do Vídeo: Boneco no canto (Badge PiP) + Cenas de filmes/situações dinâmicas
+            badge_rel = s_info.get("badge_asset", "assets/branding/narrator_badge_official.png")
+            badge_path = os.path.join(PROJECT_ROOT, badge_rel) if not os.path.isabs(badge_rel) else badge_rel
+            if not os.path.exists(badge_path):
+                badge_path = os.path.join(PROJECT_ROOT, "assets", "branding", "narrator_badge_official.png")
+
+            p_clip_rel = s_info.get("primary_clip")
+            p_clip = os.path.join(PROJECT_ROOT, p_clip_rel) if p_clip_rel and not os.path.isabs(p_clip_rel) else p_clip_rel
+            s_clip_rel = s_info.get("secondary_clip")
+            s_clip = os.path.join(PROJECT_ROOT, s_clip_rel) if s_clip_rel and not os.path.isabs(s_clip_rel) else s_clip_rel
+
+            # Fallback se primary_clip não definido mas situation_clips coletado
+            if (not p_clip or not os.path.exists(p_clip)) and situation_clips and i < len(situation_clips) and situation_clips[i]:
+                p_clip = situation_clips[i]
+
+            has_primary = p_clip and os.path.exists(p_clip)
+            has_secondary = s_clip and os.path.exists(s_clip)
+
+            if has_primary and has_secondary:
+                # Dois cortes rápidos por cena para máxima dinâmica
+                dur1 = dur_per_scene / 2.0
+                dur2 = dur_per_scene - dur1
+
+                part1 = os.path.join(work_dir, f"scene_{i+1}_p1.mp4")
+                cmd1 = [
+                    "ffmpeg", "-y", "-stream_loop", "5", "-i", p_clip, "-i", badge_path,
+                    "-filter_complex", "[0:v]scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,fps=30[bg];[1:v]scale=340:340[badge];[bg][badge]overlay=W-w-50:H-h-50[v_out]",
+                    "-map", "[v_out]", "-t", f"{dur1:.3f}",
+                    "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                    part1
+                ]
+                r1 = subprocess.run(cmd1, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+                part2 = os.path.join(work_dir, f"scene_{i+1}_p2.mp4")
+                cmd2 = [
+                    "ffmpeg", "-y", "-stream_loop", "5", "-i", s_clip, "-i", badge_path,
+                    "-filter_complex", "[0:v]scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,fps=30[bg];[1:v]scale=340:340[badge];[bg][badge]overlay=W-w-50:H-h-50[v_out]",
+                    "-map", "[v_out]", "-t", f"{dur2:.3f}",
+                    "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                    part2
+                ]
+                r2 = subprocess.run(cmd2, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+                if r1.returncode == 0 and os.path.exists(part1):
+                    animated_video_clips.append(part1)
+                if r2.returncode == 0 and os.path.exists(part2):
+                    animated_video_clips.append(part2)
+
+            elif has_primary:
+                # Um clipe com badge no canto
+                part = os.path.join(work_dir, f"scene_{i+1}_full.mp4")
+                cmd = [
+                    "ffmpeg", "-y", "-stream_loop", "5", "-i", p_clip, "-i", badge_path,
+                    "-filter_complex", "[0:v]scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,fps=30[bg];[1:v]scale=340:340[badge];[bg][badge]overlay=W-w-50:H-h-50[v_out]",
+                    "-map", "[v_out]", "-t", f"{dur_per_scene:.3f}",
+                    "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                    part
+                ]
+                r = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                if r.returncode == 0 and os.path.exists(part):
+                    animated_video_clips.append(part)
+                else:
+                    animated_video_clips.append(img_path)
+            else:
+                # Fallback Ken Burns do frame
+                anim_path = os.path.join(work_dir, f"anim_fallback_{i+1}.mp4")
+                frames = int(dur_per_scene * 30)
+                cmd_anim = [
+                    "ffmpeg", "-y",
+                    "-i", img_path,
+                    "-vf", f"scale=1920:1080,zoompan=z='min(zoom+0.0006,1.06)':d={frames}:s=1920x1080:fps=30",
+                    "-t", f"{dur_per_scene:.3f}",
+                    "-c:v", "libx264",
+                    "-preset", "veryfast",
+                    "-pix_fmt", "yuv420p",
+                    anim_path
+                ]
+                res = subprocess.run(cmd_anim, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                if res.returncode == 0 and os.path.exists(anim_path):
+                    animated_video_clips.append(anim_path)
+                else:
+                    animated_video_clips.append(img_path)
 
     # 2. Concatenação de todos os blocos de vídeo e mixagem de áudio imersivo com legendas
     concat_txt = os.path.join(work_dir, "scenes_concat.txt")
@@ -333,6 +391,8 @@ def run_pipeline_for_day(day_number: int, dry_run: bool = False) -> bool:
         frame_path = os.path.join(out_day_dir, f"scene_{idx}.png")
         art_rel = s.get("art_asset", "")
         art_path = os.path.join(PROJECT_ROOT, art_rel) if art_rel and not os.path.isabs(art_rel) else art_rel
+        if not art_path or not os.path.exists(art_path):
+            art_path = os.path.join(PROJECT_ROOT, "assets", "branding", "sr_palito_official.jpg")
 
         if art_path and os.path.exists(art_path):
             base_img = Image.open(art_path).convert("RGB")
@@ -395,11 +455,12 @@ def run_pipeline_for_day(day_number: int, dry_run: bool = False) -> bool:
     broll_clips = get_curated_broll_clips(day_item.get("broll_queries", []), out_day_dir, max_clips=3)
     print(f"Inserções de B-roll processadas: {len(broll_clips)} clipes.")
 
-    # Montagem do vídeo longo 1920x1080 intercalando Narrador e Situações com legendas dinâmicas
+    # Montagem do vídeo longo 1920x1080: Sr. Palito full início/fim + badge PiP no meio com cenas dinâmicas
     long_video_path = os.path.join(out_day_dir, "video.mp4")
     video_ok = assemble_video_ffmpeg(
         scene_images, broll_clips, final_audio, long_video_path, final_dur,
-        ass_subtitle_name="transcript.ass", situation_clips=situation_clips
+        ass_subtitle_name="transcript.ass", situation_clips=situation_clips,
+        scenes_data=scenes
     )
     if not video_ok:
         print("[ERRO CRÍTICO] Falha na montagem do vídeo longo.")
