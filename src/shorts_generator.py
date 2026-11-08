@@ -257,9 +257,25 @@ def generate_daily_shorts(
     generator = ShortsGenerator(out_dir)
     shorts_list = []
 
-    scenes = script_data.get("scenes", [])
     day = day_info["day"]
     title = day_info["title"]
+
+    # Se houver histórias curadas de alto impacto em DAY_SCRIPTS, priorizar para máxima retenção
+    try:
+        from src.day_scripts import DAY_SCRIPTS
+        curated_shorts = DAY_SCRIPTS.get(day, {}).get("shorts_stories", [])
+    except Exception:
+        curated_shorts = []
+
+    if curated_shorts and len(curated_shorts) >= 3:
+        for cs in curated_shorts[:shorts_count]:
+            s_num = cs["short_num"]
+            s_title = cs["title"]
+            s_text = cs["narration"]
+            shorts_list.append(generator.build_short_video(s_num, s_title, s_text, day, dry_run=dry_run))
+        return shorts_list
+
+    scenes = script_data.get("scenes", [])
     loop_hooks = get_loop_hooks(day, day_info["cta_rule_number"])
 
     # Short 1: Hook + Cena 1 e 2

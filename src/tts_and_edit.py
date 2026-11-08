@@ -83,10 +83,10 @@ async def generate_edge_tts(
     text: str,
     output_audio_path: str,
     output_srt_path: str,
-    voice: str = "pt-BR-AntonioNeural",
-    rate: str = "+3%",
+    voice: str = "pt-BR-ThalitaMultilingualNeural",
+    rate: str = "+0%",
     pitch: str = "-1Hz",
-    timeout_sec: float = 60.0
+    timeout_sec: float = 180.0
 ) -> bool:
     """Invoca o edge-tts assincronamente com geração de SRT e tempos precisos."""
     try:
@@ -118,7 +118,7 @@ async def generate_edge_tts(
     try:
         return await asyncio.wait_for(_stream(), timeout=timeout_sec)
     except Exception as e:
-        print(f"[TTS] Erro/Timeout ao comunicar com edge-tts: {e}")
+        print(f"[TTS] Erro/Timeout ao comunicar com edge-tts ({voice}): {e}")
         return False
 
 
@@ -128,27 +128,29 @@ def synthesize_speech(
     out_srt_path: str,
     dry_run: bool = False
 ) -> Tuple[bool, float]:
-    """Síntese de voz com áudio neural de estúdio de alta fidelidade."""
+    """Síntese de voz com áudio neural expressivo de estúdio (ThalitaMultilingualNeural)."""
     ensure_sfx()
     os.makedirs(os.path.dirname(os.path.abspath(out_audio_path)), exist_ok=True)
 
-    # 1. Tentar edge-tts oficial (pt-BR-AntonioNeural com pitch e cadência naturais de podcast/mentor)
+    # 1. Tentar modelo de voz neural de alta fidelidade dramática (ThalitaMultilingualNeural)
     temp_raw = out_audio_path + ".raw.mp3"
-    for attempt in range(3):
-        try:
-            success = asyncio.run(generate_edge_tts(text, temp_raw, out_srt_path, voice="pt-BR-AntonioNeural", rate="+3%", pitch="-1Hz"))
-            if success and os.path.exists(temp_raw) and os.path.getsize(temp_raw) > 1000:
-                if remove_silence_ffmpeg(temp_raw, out_audio_path):
-                    if os.path.exists(temp_raw):
-                        try: os.remove(temp_raw)
-                        except Exception: pass
-                    dur = get_audio_duration(out_audio_path)
-                    print(f"[TTS] Voz neural oficial pt-BR-AntonioNeural sintetizada com sucesso ({dur:.1f}s)")
+    candidate_voices = ["pt-BR-ThalitaMultilingualNeural", "pt-BR-FranciscaNeural"]
+    for voice in candidate_voices:
+        for attempt in range(2):
+            try:
+                success = asyncio.run(generate_edge_tts(text, temp_raw, out_srt_path, voice=voice, rate="+0%", pitch="-1Hz"))
+                if success and os.path.exists(temp_raw) and os.path.getsize(temp_raw) > 1000:
+                    if remove_silence_ffmpeg(temp_raw, out_audio_path):
+                        if os.path.exists(temp_raw):
+                            try: os.remove(temp_raw)
+                            except Exception: pass
+                        dur = get_audio_duration(out_audio_path)
+                        print(f"[TTS] Voz neural dramática oficial {voice} sintetizada com sucesso ({dur:.1f}s)")
+                        return True, dur
+                    dur = get_audio_duration(temp_raw)
                     return True, dur
-                dur = get_audio_duration(temp_raw)
-                return True, dur
-        except Exception as e:
-            print(f"[TTS] Tentativa {attempt + 1}/3 ({e})")
+            except Exception as e:
+                print(f"[TTS] Tentativa {attempt + 1}/2 com {voice} ({e})")
 
     # 2. Fallback somente se não houver internet
     print("[TTS] Usando síntese de referência offline.")
