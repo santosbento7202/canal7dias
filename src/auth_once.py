@@ -50,7 +50,19 @@ def main():
     client_secret = secret_data[app_type]["client_secret"]
 
     flow = InstalledAppFlow.from_client_secrets_file(args.client_secrets, SCOPES)
-    creds = flow.run_local_server(port=0, prompt="consent", access_type="offline")
+    port = 8080 if app_type == "web" else 0
+    print(f"\n[OAuth] Iniciando servidor local na porta {port if port else 'dinâmica'}...")
+    if app_type == "web":
+        print("[Aviso] Credencial do tipo Web detectada.")
+        print("Caso ocorra erro 'redirect_uri_mismatch' no navegador:")
+        print("1. Adicione 'http://localhost:8080/' nos 'URIs de redirecionamento autorizados' no Google Cloud Console, OU")
+        print("2. Crie uma credencial OAuth do tipo 'Aplicativo para Computador' (Desktop App), que não requer URIs fixos.")
+    try:
+        creds = flow.run_local_server(port=port, prompt="consent", access_type="offline")
+    except Exception as e:
+        print(f"\n[OAuth] Erro ao autenticar: {e}")
+        print("Dica: Recomendamos criar a credencial como 'Aplicativo para Computador' no Google Cloud para autorização sem complicação de portas.")
+        sys.exit(1)
 
     print("\n" + "=" * 60)
     print("AUTENTICAÇÃO CONCLUÍDA COM SUCESSO!")
