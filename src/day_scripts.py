@@ -157,6 +157,120 @@ DAY_SCRIPTS = {
                 "narration": "Quando alguém tentar te humilhar ou provocar em público, nunca responda com raiva. Olhe nos olhos da pessoa, espere três segundos em silêncio e pergunte em tom calmo: Você está bem? Isso inverte o enquadramento: você vira o adulto da sala e a pessoa percebe que acabou de passar vergonha sozinha."
             }
         ]
+    },
+    2: {
+        "title": "5 Sinais Ocultos de Que Alguém Está Mentindo Para Você",
+        "thumb_text": "OLHE PARA OS PÉS",
+        "hook_formula": "The Mistake",
+        "full_narration": (
+            "Você ainda acredita no mito ingênuo de que quem mente desvia o olhar? "
+            "A psicologia forense e os interrogadores de elite comprovam exatamente o oposto: "
+            "o mentiroso experiente te encara fixamente nos olhos sem piscar, para monitorar a sua reação e conferir se você comprou a farsa.\n\n"
+            "Se você quer descobrir a verdade, precisa aprender a ler a Lei do Vazamento Não-Verbal de Paul Ekman. "
+            "O cérebro límbico — a parte mais primitiva e honesta da mente humana — controla os pés e as pernas antes de tentar controlar as microexpressões do rosto. "
+            "Aqui estão os cinco sinais científicos de engano que ninguém consegue ocultar:\n\n"
+            "Primeiro: A Orientação de Fuga dos Pés. Em uma conversa tensa, o tronco e o rosto da pessoa podem estar voltados educadamente para você, "
+            "mas se os pés estiverem virados para a porta ou apontando para longe, o subconsciente dela já decretou o desejo biológico de escapar da mentira.\n\n"
+            "Segundo: O Congelamento Límbico. Uma pessoa dizendo a verdade gesticula com fluidez e assimetria natural. "
+            "Quem inventa uma farsa sofre uma sobrecarga cognitiva brutal para não cometer contradições. "
+            "O cérebro entra no reflexo de congelamento: os braços colam ao corpo, as mãos agarram objetos ou os dedos travam sobre a mesa para poupar energia neural.\n\n"
+            "Terceiro: A Microexpressão Universal do Desprezo. O mentiroso arrogante não sente apenas medo; ele sente o que os psicólogos chamam de Deleite do Engano. "
+            "Preste atenção no canto da boca. Um leve puxão unilateral para cima durante uma fração de segundo revela a convicção de que ele é mais inteligente do que você.\n\n"
+            "Quarto: A Dissonância Temporal do Gesto. Quando uma história é verdadeira, o corpo gesticula milissegundos antes ou no exato instante da fala. "
+            "Na mentira ensaiada, ocorre um atraso perceptível: a boca afirma Eu não fiz isso, e apenas um segundo depois a cabeça assente em negação forçada.\n\n"
+            "Quinto: A Técnica Colombo de Sobrecarga Mental. Nunca confronte um mentiroso de frente acusando-o de mentir, pois ele ativará a defensiva imediata. "
+            "Faça como os grandes detetives: finja inocência e peça para ele recontar os fatos em ordem cronológica inversa, do fim para o começo. "
+            "A mentira é construída em linha reta; ao inverter a ordem, a carga cognitiva explode e a narrativa desmorona diante dos seus olhos.\n\n"
+            "O Sr. Palito nunca perde a calma para tirar satisfações. Ele apenas observa os sinais silenciosos e deixa que os tolos se enforquem na própria mentira. "
+            "Se você quer dominar a leitura da mente humana, comente Eu enxergo os sinais e inscreva-se no Código Social para o próximo nível."
+        ),
+        "scenes": [
+            {
+                "scene_num": 1,
+                "title_card": "O MITO DO OLHAR",
+                "layout_mode": "fullscreen_narrator",
+                "art_asset": "assets/branding/sr_palito_blueprint.jpg",
+                "narration_part": "Você ainda acredita no mito ingênuo de que quem mente desvia o olhar? A psicologia forense e os interrogadores de elite comprovam exatamente o oposto: o mentiroso experiente te encara fixamente nos olhos sem piscar, para monitorar a sua reação e conferir se você comprou a farsa."
+            },
+            {
+                "scene_num": 2,
+                "title_card": "1. OS PÉS ENTREGAM A FUGA",
+                "layout_mode": "corner_narrator",
+                "badge_asset": "assets/branding/narrator_badge_thinking.png",
+                "primary_clip": "assets/broll_cache/feet_pointing_door.mp4",
+                "secondary_clip": "assets/broll_cache/interrogation_mirror.mp4",
+                "narration_part": "Se você quer descobrir a verdade, precisa aprender a ler a Lei do Vazamento Não-Verbal de Paul Ekman. O cérebro límbico controla os pés antes de controlar o rosto. Se os pés estiverem virados para a porta ou apontando para longe, o subconsciente da pessoa já decretou o desejo biológico de escapar da mentira."
+            },
+            {
+                "scene_num": 3,
+                "title_card": "2. O CONGELAMENTO LÍMBICO",
+                "layout_mode": "corner_narrator",
+                "badge_asset": "assets/branding/narrator_badge_official.png",
+                "primary_clip": "assets/broll_cache/nervous_hands_fidget.mp4",
+                "secondary_clip": "assets/broll_cache/american_psycho_sweat.mp4",
+                "narration_part": "Segundo sinal: O Congelamento Límbico. Uma pessoa verdadeira gesticula com fluidez. Quem inventa uma farsa sofre uma sobrecarga cognitiva brutal para não cometer contradições. O cérebro entra no reflexo de congelamento: os braços colam ao corpo e as mãos travam para economizar processamento neural."
+            },
+            {
+                "scene_num": 4,
+                "title_card": "3. O MICRO-DESPREZO",
+                "layout_mode": "corner_narrator",
+                "badge_asset": "assets/branding/narrator_badge_pointing.png",
+                "primary_clip": "assets/broll_cache/talleyrand_smirk.mp4",
+                "secondary_clip": "assets/broll_cache/hannibal_eye_contact.mp4",
+                "narration_part": "Terceiro sinal: A Microexpressão Universal do Desprezo. O mentiroso arrogante sente o que os psicólogos chamam de Deleite do Engano. Preste atenção no canto da boca: um leve puxão unilateral para cima durante uma fração de segundo revela a convicção de que ele é mais inteligente do que você."
+            },
+            {
+                "scene_num": 5,
+                "title_card": "4. A DISSONÂNCIA TEMPORAL",
+                "layout_mode": "corner_narrator",
+                "badge_asset": "assets/branding/narrator_badge_thinking.png",
+                "primary_clip": "assets/broll_cache/eye_shift_nervous.mp4",
+                "secondary_clip": "assets/broll_cache/shelby_silence_stare.mp4",
+                "narration_part": "Quarto sinal: A Dissonância Temporal do Gesto. Na história real, o corpo gesticula sincronizado com a fala. Na mentira ensaiada, ocorre um atraso perceptível: a boca afirma Eu não fiz isso, e apenas um segundo depois a cabeça assente em negação forçada."
+            },
+            {
+                "scene_num": 6,
+                "title_card": "5. O PROTOCOLO COLOMBO",
+                "layout_mode": "corner_narrator",
+                "badge_asset": "assets/branding/narrator_badge_power.png",
+                "primary_clip": "assets/broll_cache/logan_roy_stare.mp4",
+                "secondary_clip": "assets/broll_cache/godfather_door_close.mp4",
+                "narration_part": "Quinto sinal: A Técnica Colombo de Sobrecarga Mental. Nunca confronte um mentiroso acusando-o de frente. Finja inocência e peça para ele recontar os fatos em ordem cronológica inversa, do fim para o começo. A mentira é construída em linha reta; ao inverter a ordem, a carga cognitiva explode e a farsa desmorona."
+            },
+            {
+                "scene_num": 7,
+                "title_card": "DOMINE O TABULEIRO",
+                "layout_mode": "fullscreen_narrator",
+                "art_asset": "assets/branding/sr_palito_skyscraper.jpg",
+                "narration_part": "O Sr. Palito nunca perde a calma para tirar satisfações. Ele apenas observa os sinais silenciosos e deixa que os tolos se enforquem na própria mentira. Se você quer dominar a leitura da mente humana, comente Eu enxergo os sinais e inscreva-se no Código Social para o próximo nível."
+            }
+        ],
+        "chapters": [
+            {"time": "0:00", "title": "O Mito do Olhar na Mentira"},
+            {"time": "0:30", "title": "Sinal 1: A Orientação de Fuga dos Pés"},
+            {"time": "0:58", "title": "Sinal 2: O Congelamento Límbico"},
+            {"time": "1:26", "title": "Sinal 3: O Micro-Desprezo Unilateral"},
+            {"time": "1:55", "title": "Sinal 4: A Dissonância Temporal dos Gestos"},
+            {"time": "2:22", "title": "Sinal 5: O Protocolo Colombo do FBI"},
+            {"time": "2:50", "title": "O Silêncio de Quem Enxerga o Tabuleiro"}
+        ],
+        "shorts_stories": [
+            {
+                "short_num": 1,
+                "title": "O Segredo dos Pés: Como Pegar Uma Mentira",
+                "narration": "Você acha que quem mente desvia o olhar? Mentirosos te encaram nos olhos para conferir se você acreditou. Mas o cérebro límbico sempre entrega a verdade nos pés: se a pessoa fala com você mas os pés apontam para a saída, ela quer fugir da própria mentira."
+            },
+            {
+                "short_num": 2,
+                "title": "A Técnica de Interrogatório Que Ninguém Escapa",
+                "narration": "Nunca acuse alguém de mentir. Peça para a pessoa contar a história em ordem inversa, do fim para o começo. Como mentiras são decoradas em linha reta, o cérebro do mentiroso entra em colapso e a farsa se desmonta sozinha."
+            },
+            {
+                "short_num": 3,
+                "title": "O Sinal do Desprezo Que Entrega a Mentira",
+                "narration": "Preste atenção no canto da boca quando alguém inventa uma desculpa. Um puxão sutil de milissegundos para cima revela o que a psicologia chama de Deleite do Engano: a pessoa acha que é mais inteligente do que você antes da máscara cair."
+            }
+        ]
     }
 }
 

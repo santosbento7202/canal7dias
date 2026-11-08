@@ -123,28 +123,51 @@ class ShortsGenerator:
             art_full_path = os.path.join(PROJECT_ROOT, "assets", "branding", "sr_palito_power.jpg")
 
         # 4. Biblioteca de múltiplos clipes por Short (cortes rápidos a cada ~3-4s sem repetição)
-        shorts_multiclips_map = {
-            1: [
-                "assets/broll_cache/napoleon_screaming.mp4",
-                "assets/broll_cache/talleyrand_calm_stare.mp4",
-                "assets/broll_cache/thomas_shelby_smoke.mp4",
-                "assets/broll_cache/talleyrand_smirk.mp4"
-            ],
-            2: [
-                "assets/broll_cache/musashi_samurai_duel.mp4",
-                "assets/broll_cache/napoleon_battle_anger.mp4",
-                "assets/broll_cache/samurai_strike_fast.mp4",
-                "assets/broll_cache/shelby_silence_stare.mp4"
-            ],
-            3: [
-                "assets/broll_cache/american_psycho_sweat.mp4",
-                "assets/broll_cache/hannibal_eye_contact.mp4",
-                "assets/broll_cache/logan_roy_stare.mp4",
-                "assets/broll_cache/fight_club_unreactive.mp4"
-            ]
+        day_specific_multiclips = {
+            1: {
+                1: [
+                    "assets/broll_cache/napoleon_screaming.mp4",
+                    "assets/broll_cache/talleyrand_calm_stare.mp4",
+                    "assets/broll_cache/thomas_shelby_smoke.mp4",
+                    "assets/broll_cache/talleyrand_smirk.mp4"
+                ],
+                2: [
+                    "assets/broll_cache/musashi_samurai_duel.mp4",
+                    "assets/broll_cache/napoleon_battle_anger.mp4",
+                    "assets/broll_cache/samurai_strike_fast.mp4",
+                    "assets/broll_cache/shelby_silence_stare.mp4"
+                ],
+                3: [
+                    "assets/broll_cache/american_psycho_sweat.mp4",
+                    "assets/broll_cache/hannibal_eye_contact.mp4",
+                    "assets/broll_cache/logan_roy_stare.mp4",
+                    "assets/broll_cache/fight_club_unreactive.mp4"
+                ]
+            },
+            2: {
+                1: [
+                    "assets/broll_cache/feet_pointing_door.mp4",
+                    "assets/broll_cache/interrogation_mirror.mp4",
+                    "assets/broll_cache/eye_shift_nervous.mp4",
+                    "assets/broll_cache/hannibal_eye_contact.mp4"
+                ],
+                2: [
+                    "assets/broll_cache/logan_roy_stare.mp4",
+                    "assets/broll_cache/godfather_door_close.mp4",
+                    "assets/broll_cache/nervous_hands_fidget.mp4",
+                    "assets/broll_cache/interrogation_mirror.mp4"
+                ],
+                3: [
+                    "assets/broll_cache/talleyrand_smirk.mp4",
+                    "assets/broll_cache/hannibal_eye_contact.mp4",
+                    "assets/broll_cache/american_psycho_sweat.mp4",
+                    "assets/broll_cache/shelby_silence_stare.mp4"
+                ]
+            }
         }
 
-        raw_clip_candidates = shorts_multiclips_map.get(short_num, shorts_multiclips_map[1])
+        day_clips = day_specific_multiclips.get(day, day_specific_multiclips[1])
+        raw_clip_candidates = day_clips.get(short_num, day_clips[1])
         valid_clips = []
         for rc in raw_clip_candidates:
             p = os.path.join(PROJECT_ROOT, rc) if not os.path.isabs(rc) else rc

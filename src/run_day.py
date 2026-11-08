@@ -482,7 +482,14 @@ def run_pipeline_for_day(day_number: int, dry_run: bool = False) -> bool:
     # ----------------------------------------------------
     print("\n>>> [PORTÃO 6] Gerando Thumbnail 1280x720...")
     thumb_path = os.path.join(out_day_dir, "thumb.png")
-    power_art = os.path.join(PROJECT_ROOT, "assets", "branding", "sr_palito_steeple.jpg")
+    day_thumb_arts = {
+        1: "sr_palito_steeple.jpg",
+        2: "sr_palito_blueprint.jpg",
+        3: "sr_palito_cufflinks.jpg",
+        4: "sr_palito_skyscraper.jpg",
+    }
+    thumb_file = day_thumb_arts.get(day_number, "sr_palito_steeple.jpg")
+    power_art = os.path.join(PROJECT_ROOT, "assets", "branding", thumb_file)
     if not os.path.exists(power_art):
         power_art = os.path.join(PROJECT_ROOT, "assets", "branding", "sr_palito_cufflinks.jpg")
     if not os.path.exists(power_art):
