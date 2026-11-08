@@ -313,6 +313,54 @@ def get_deterministic_script(day_info: Dict[str, Any]) -> Dict[str, Any]:
     hooks = hooks_map.get(day, hooks_map[1])
     chosen_hook = hooks[0]["text"]
 
+    try:
+        from src.day_scripts import DAY_SCRIPTS
+        if day in DAY_SCRIPTS:
+            curated = DAY_SCRIPTS[day]
+            scenes_data = []
+            for sc in curated["scenes"]:
+                scenes_data.append({
+                    "scene_num": sc["scene_num"],
+                    "duration_sec": 18,
+                    "narration": sc["narration_part"],
+                    "visual": sc.get("art_asset", ""),
+                    "art_asset": sc.get("art_asset", ""),
+                    "fig_pose": "confident",
+                    "fig_expression": "calm",
+                    "caption": sc["title_card"],
+                    "broll_query": day_info["broll_queries"][0],
+                    "broll_mode": "cutaway"
+                })
+            pinned_comments = {
+                1: "Qual dessas regras você já aplicou na prática e sentiu a mudança imediata no tratamento das pessoas? Comente abaixo.",
+                2: "Você já pegou alguém mentindo na sua frente apenas observando a direção dos pés ou o corpo? Conte sua experiência.",
+                3: "O que dói mais em quem tenta te desrespeitar: o seu silêncio total ou uma pergunta calma no momento certo?",
+                4: "Você tem coragem de se afastar de um amigo de anos se perceber os sinais de falsidade e inveja velada?",
+                5: "Por que você acha que a maioria das pessoas só valoriza o que perdeu e nunca o que está sempre disponível?",
+                6: "Qual sinal não-verbal transmite mais autoridade e segurança para você em um primeiro encontro?",
+                7: "Qual é o manipulador mais perigoso: o que se faz de vítima indefesa ou o que tenta impor autoridade à força?"
+            }
+            tags_map = {
+                1: ["respeito", "linguagem corporal", "psicologia prática", "dinamica social", "comportamento", "postura", "autoridade"],
+                2: ["como detectar mentiras", "linguagem corporal mentira", "psicologia mentira", "sinais corporais", "microexpressoes"],
+                3: ["como responder ofensas", "comunicacao assertiva", "inteligencia emocional", "falta de respeito", "maturidade"],
+                4: ["falsos amigos", "inveja silenciosa", "como identificar inveja", "amizades toxicas", "dinamica social"],
+                5: ["lei do vacuo", "valor social", "por que pessoas somem", "desapego", "psicologia reversa"],
+                6: ["efeito espelho", "como ser atraente", "linguagem corporal atracao", "rapport", "carisma silencioso"],
+                7: ["como se defender de manipulacao", "chantagem emocional", "gaslighting", "psicologia escura", "manipuladores"]
+            }
+            return {
+                "hooks": hooks,
+                "chosen_hook": chosen_hook,
+                "scenes": scenes_data,
+                "full_narration": curated["full_narration"],
+                "pinned_comment": pinned_comments.get(day, pinned_comments[1]),
+                "tags": tags_map.get(day, tags_map[1])[:15],
+                "chapters": curated.get("chapters", [])
+            }
+    except Exception as e:
+        print(f"[CURATED] Aviso: {e}")
+
     # Cenas estruturadas com alternância de poses, ritmo e retenção
     scenes_data = [
         {

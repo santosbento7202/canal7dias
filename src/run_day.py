@@ -100,9 +100,10 @@ def assemble_video_ffmpeg(
     broll_clips: List[Dict],
     audio_path: str,
     output_mp4: str,
-    total_duration: float
+    total_duration: float,
+    ass_subtitle_name: Optional[str] = "transcript.ass"
 ) -> bool:
-    """Monta vídeo ultra dinâmico 1920x1080 com Ken Burns zoompan (4-6%), inserções de B-roll e áudio estúdio."""
+    """Monta vídeo cinematográfico 1920x1080 com Ken Burns zoompan (4-6%), legendas dinâmicas ASS e áudio imersivo."""
     work_dir = os.path.dirname(output_mp4)
     n_scenes = len(scene_images)
     dur_per_scene = total_duration / max(1, n_scenes)
@@ -115,7 +116,7 @@ def assemble_video_ffmpeg(
         cmd_anim = [
             "ffmpeg", "-y",
             "-i", img_path,
-            "-vf", f"scale=1920:1080,zoompan=z='min(zoom+0.0010,1.05)':d={frames}:s=1920x1080:fps=30",
+            "-vf", f"scale=1920:1080,zoompan=z='min(zoom+0.0008,1.06)':d={frames}:s=1920x1080:fps=30",
             "-t", f"{dur_per_scene:.3f}",
             "-c:v", "libx264",
             "-preset", "veryfast",
@@ -128,12 +129,12 @@ def assemble_video_ffmpeg(
             # Inserir cutaway dinâmico de B-roll após a abertura (cena 1) e na metade (cena 4)
             if i == 0 and len(broll_clips) > 0:
                 animated_video_clips.append(broll_clips[0]["path"])
-            elif i == 3 and len(broll_clips) > 1:
+            elif i == 4 and len(broll_clips) > 1:
                 animated_video_clips.append(broll_clips[1]["path"])
         else:
             animated_video_clips.append(img_path)
 
-    # 2. Concatenação de todos os blocos de vídeo e mixagem de áudio imersivo
+    # 2. Concatenação de todos os blocos de vídeo e mixagem de áudio imersivo com legendas
     concat_txt = os.path.join(work_dir, "scenes_concat.txt")
     with open(concat_txt, "w") as f:
         for p in animated_video_clips:
@@ -144,9 +145,14 @@ def assemble_video_ffmpeg(
     if not os.path.exists(bgm_path):
         try:
             from src.audio_ambient import ensure_dark_ambient_bgm
-            ensure_dark_ambient_bgm(max(180.0, total_duration + 30.0), bgm_path)
+            ensure_dark_ambient_bgm(max(240.0, total_duration + 30.0), bgm_path)
         except Exception:
             pass
+
+    # Filtro de vídeo com legendas cinéticas estilizadas
+    vf_chain = "scale=1920:1080,fps=30"
+    if ass_subtitle_name and os.path.exists(os.path.join(work_dir, ass_subtitle_name)):
+        vf_chain = f"scale=1920:1080,subtitles={ass_subtitle_name},fps=30"
 
     if os.path.exists(bgm_path):
         cmd = [
@@ -155,10 +161,10 @@ def assemble_video_ffmpeg(
             "-i", concat_txt,
             "-i", audio_path,
             "-stream_loop", "-1", "-i", bgm_path,
-            "-filter_complex", "[1:a]volume=1.0[v_aud];[2:a]volume=0.20[b_aud];[v_aud][b_aud]amix=inputs=2:duration=first:dropout_transition=2[aout]",
+            "-filter_complex", f"[1:a]volume=1.0[v_aud];[2:a]volume=0.18[b_aud];[v_aud][b_aud]amix=inputs=2:duration=first:dropout_transition=2[aout]",
             "-map", "0:v",
             "-map", "[aout]",
-            "-vf", "scale=1920:1080,fps=30",
+            "-vf", vf_chain,
             "-c:v", "libx264",
             "-preset", "veryfast",
             "-pix_fmt", "yuv420p",
@@ -173,7 +179,7 @@ def assemble_video_ffmpeg(
             "-f", "concat", "-safe", "0",
             "-i", concat_txt,
             "-i", audio_path,
-            "-vf", "scale=1920:1080,fps=30",
+            "-vf", vf_chain,
             "-c:v", "libx264",
             "-preset", "veryfast",
             "-pix_fmt", "yuv420p",
@@ -184,7 +190,7 @@ def assemble_video_ffmpeg(
         ]
 
     try:
-        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        res = subprocess.run(cmd, cwd=work_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         return res.returncode == 0 and os.path.exists(output_mp4)
     except Exception as e:
         print(f"[FFMPEG] Erro na montagem ({e})")
@@ -279,9 +285,14 @@ def run_pipeline_for_day(day_number: int, dry_run: bool = False) -> bool:
     print(f"Capítulos gerados: {len(chapters_list)} entradas (Válido: {chap_res.get('valid')})")
 
     # ----------------------------------------------------
-    # PORTÃO 5: Renderização Stickman + Pexels B-Roll
+    # PORTÃO 5: Renderização 4K Sr. Palito + Legendas ASS + B-Roll
     # ----------------------------------------------------
-    print("\n>>> [PORTÃO 5] Renderizando cenas Stickman e B-roll Pexels...")
+    print("\n>>> [PORTÃO 5] Renderizando cenas 4K do Sr. Palito e legendas dinâmicas...")
+    from src.subtitle_styler import srt_to_dynamic_ass
+    ass_path = os.path.join(out_day_dir, "transcript.ass")
+    srt_to_dynamic_ass(srt_path, ass_path, is_vertical=False)
+
+    from PIL import Image, ImageDraw, ImageFont
     renderer = StickmanRenderer(scale_factor=2)
     scene_images = []
     scenes = script_data.get("scenes", [])
@@ -289,45 +300,102 @@ def run_pipeline_for_day(day_number: int, dry_run: bool = False) -> bool:
     for s in scenes:
         idx = s.get("scene_num", 1)
         frame_path = os.path.join(out_day_dir, f"scene_{idx}.png")
-        fig = Fig(
-            x=960,
-            y=760,
-            scale=1.4,
-            pose=s.get("fig_pose", "confident"),
-            expression=s.get("fig_expression", "smirk"),
-            color=COLOR_WHITE,
-            head_accessory="crown",
-            is_sr_palito=True,
-            facing=1
-        )
-        img = renderer.render_scene(
-            width=1920,
-            height=1080,
-            figures=[fig],
-            caption_text=s.get("caption", ""),
-            spotlight_pos=(0.5, 0.45, 0.45)
-        )
-        img.save(frame_path, format="PNG")
+        art_rel = s.get("art_asset", "")
+        art_path = os.path.join(PROJECT_ROOT, art_rel) if art_rel and not os.path.isabs(art_rel) else art_rel
+
+        if art_path and os.path.exists(art_path):
+            base_img = Image.open(art_path).convert("RGB")
+            base_img = base_img.resize((1920, 1080), Image.Resampling.LANCZOS)
+            draw = ImageDraw.Draw(base_img)
+
+            caption_text = s.get("caption", "")
+            if caption_text:
+                font_path = os.path.join(PROJECT_ROOT, "assets", "fonts", "Anton-Regular.ttf")
+                try:
+                    font = ImageFont.truetype(font_path, 40)
+                except Exception:
+                    font = ImageFont.load_default()
+
+                bbox = draw.textbbox((0, 0), caption_text, font=font)
+                tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
+                bx = (1920 - tw) // 2
+                by = 60
+                pad_x, pad_y = 22, 10
+                draw.rectangle([bx - pad_x, by - pad_y, bx + tw + pad_x, by + th + pad_y], fill=(0, 0, 0, 210), outline=(255, 215, 0), width=2)
+                draw.text((bx, by), caption_text, fill=(255, 215, 0), font=font)
+
+            base_img.save(frame_path, format="PNG")
+        else:
+            fig = Fig(
+                x=960,
+                y=760,
+                scale=1.4,
+                pose=s.get("fig_pose", "confident"),
+                expression=s.get("fig_expression", "smirk"),
+                color=COLOR_WHITE,
+                head_accessory="crown",
+                is_sr_palito=True,
+                facing=1
+            )
+            img = renderer.render_scene(
+                width=1920,
+                height=1080,
+                figures=[fig],
+                caption_text=s.get("caption", ""),
+                spotlight_pos=(0.5, 0.45, 0.45)
+            )
+            img.save(frame_path, format="PNG")
         scene_images.append(frame_path)
 
     # Inserções de B-roll curado
     broll_clips = get_curated_broll_clips(day_item.get("broll_queries", []), out_day_dir, max_clips=3)
     print(f"Inserções de B-roll processadas: {len(broll_clips)} clipes.")
 
-    # Montagem do vídeo longo 1920x1080
+    # Montagem do vídeo longo 1920x1080 com legendas dinâmicas
     long_video_path = os.path.join(out_day_dir, "video.mp4")
-    video_ok = assemble_video_ffmpeg(scene_images, broll_clips, final_audio, long_video_path, final_dur)
+    video_ok = assemble_video_ffmpeg(scene_images, broll_clips, final_audio, long_video_path, final_dur, ass_subtitle_name="transcript.ass")
     if not video_ok:
         print("[ERRO CRÍTICO] Falha na montagem do vídeo longo.")
         return False
     print(f"[OK] Vídeo longo montado: {long_video_path}")
 
     # ----------------------------------------------------
-    # PORTÃO 6: Thumbnail 1280x720 Oficial
+    # PORTÃO 6: Thumbnail 1280x720 Oficial de Alta Conversão
     # ----------------------------------------------------
     print("\n>>> [PORTÃO 6] Gerando Thumbnail 1280x720...")
     thumb_path = os.path.join(out_day_dir, "thumb.png")
-    renderer.render_thumbnail(title, thumb_text, thumb_visual, thumb_path)
+    power_art = os.path.join(PROJECT_ROOT, "assets", "branding", "sr_palito_power.jpg")
+    if not os.path.exists(power_art):
+        power_art = os.path.join(PROJECT_ROOT, "assets", "branding", "sr_palito_official.jpg")
+
+    if os.path.exists(power_art):
+        t_img = Image.open(power_art).convert("RGB")
+        t_img = t_img.resize((1280, 720), Image.Resampling.LANCZOS)
+        t_draw = ImageDraw.Draw(t_img)
+
+        font_path = os.path.join(PROJECT_ROOT, "assets", "fonts", "Anton-Regular.ttf")
+        try:
+            f_badge = ImageFont.truetype(font_path, 34)
+            f_main = ImageFont.truetype(font_path, 92)
+        except Exception:
+            f_badge = f_main = ImageFont.load_default()
+
+        # Badge vermelho superior: "7 REGRAS"
+        badge_text = "7 REGRAS SILENCIOSAS"
+        t_draw.rectangle([70, 70, 460, 125], fill=(220, 20, 20))
+        t_draw.text((85, 78), badge_text, fill=(255, 255, 255), font=f_badge)
+
+        # Texto principal: "PARE DE AGRADAR" em amarelo ouro com contorno preto espesso
+        main_text = thumb_text.upper() if thumb_text else "PARE DE AGRADAR"
+        tx, ty = 70, 145
+        for ox in range(-6, 7):
+            for oy in range(-6, 7):
+                if ox != 0 or oy != 0:
+                    t_draw.text((tx + ox, ty + oy), main_text, fill=(0, 0, 0), font=f_main)
+        t_draw.text((tx, ty), main_text, fill=(255, 215, 0), font=f_main)
+        t_img.save(thumb_path, format="PNG")
+    else:
+        renderer.render_thumbnail(title, thumb_text, thumb_visual, thumb_path)
     print(f"[OK] Thumbnail gerada: {thumb_path}")
 
     # ----------------------------------------------------

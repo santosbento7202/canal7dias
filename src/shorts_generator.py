@@ -105,21 +105,53 @@ class ShortsGenerator:
         _, duration = synthesize_speech(narration_text, audio_path, srt_path, dry_run=dry_run)
         dur = max(15.0, min(58.0, duration))
 
-        # 2. Renderizar 3 a 4 cenas visuais verticais para dar ritmo rápido de Short
-        scenes = [
-            ("A REGRA SILENCIOSA", "confident", "calm", COLOR_WHITE, None),
-            ("NÃO REAJA COM RAIVA", "slouched", "worried", COLOR_GRAY, "xmark"),
-            ("SUSTENTE SEUS LIMITES", "cross", "calm", COLOR_WHITE, None),
-            ("ELES JOGAM. VOCÊ ENXERGA.", "pointing", "calm", COLOR_GOLD, "crown")
+        # 2. Gerar legendas verticais cinéticas ASS
+        from src.subtitle_styler import srt_to_dynamic_ass
+        ass_path = os.path.join(short_dir, "subtitles.ass")
+        srt_to_dynamic_ass(srt_path, ass_path, is_vertical=True)
+
+        # 3. Preparar quadros com arte 4K oficial do Sr. Palito adaptada para vertical (1080x1920)
+        from PIL import Image
+        art_keys = [
+            "sr_palito_pointing.jpg",
+            "sr_palito_thinking.jpg",
+            "sr_palito_power.jpg",
+            "sr_palito_official_fullbody.jpg"
         ]
+        chosen_art = art_keys[(short_num - 1) % len(art_keys)]
+        art_full_path = os.path.join(PROJECT_ROOT, "assets", "branding", chosen_art)
 
         scene_imgs = []
-        for i, (cap, pose, expr, col, acc) in enumerate(scenes):
-            frame_png = os.path.join(short_dir, f"frame_{i+1}.png")
-            self.render_short_frame(cap, pose, expr, col, frame_png, acc)
-            scene_imgs.append(frame_png)
+        if os.path.exists(art_full_path):
+            base = Image.open(art_full_path).convert("RGB")
+            # Redimensiona para cobrir o centro vertical
+            target_w, target_h = 1080, 1920
+            # Redimensiona mantendo proporção com corte central
+            scale = max(target_w / base.width, target_h / base.height)
+            new_w = int(base.width * scale)
+            new_h = int(base.height * scale)
+            resized = base.resize((new_w, new_h), Image.Resampling.LANCZOS)
+            x0 = (new_w - target_w) // 2
+            y0 = (new_h - target_h) // 2
+            cropped = resized.crop((x0, y0, x0 + target_w, y0 + target_h))
 
-        # 3. Montar vídeo vertical com Ken Burns zoompan dinâmico
+            for i in range(3):
+                frame_png = os.path.join(short_dir, f"frame_{i+1}.png")
+                cropped.save(frame_png, format="PNG")
+                scene_imgs.append(frame_png)
+        else:
+            scenes = [
+                ("A REGRA SILENCIOSA", "confident", "calm", COLOR_WHITE, None),
+                ("NÃO REAJA COM RAIVA", "slouched", "worried", COLOR_GRAY, "xmark"),
+                ("SUSTENTE SEUS LIMITES", "cross", "calm", COLOR_WHITE, None),
+                ("ELES JOGAM. VOCÊ ENXERGA.", "pointing", "calm", COLOR_GOLD, "crown")
+            ]
+            for i, (cap, pose, expr, col, acc) in enumerate(scenes):
+                frame_png = os.path.join(short_dir, f"frame_{i+1}.png")
+                self.render_short_frame(cap, pose, expr, col, frame_png, acc)
+                scene_imgs.append(frame_png)
+
+        # 4. Montar vídeo vertical com Ken Burns zoompan dinâmico e legendas
         dur_per_scene = dur / len(scene_imgs)
         anim_vertical_clips = []
         for idx, spath in enumerate(scene_imgs):
@@ -128,7 +160,7 @@ class ShortsGenerator:
             cmd_anim = [
                 "ffmpeg", "-y",
                 "-i", spath,
-                "-vf", f"scale=1080:1920,zoompan=z='min(zoom+0.0010,1.06)':d={frames}:s=1080x1920:fps=30",
+                "-vf", f"scale=1080:1920,zoompan=z='min(zoom+0.0008,1.06)':d={frames}:s=1080x1920:fps=30",
                 "-t", f"{dur_per_scene:.3f}",
                 "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                 anim_clip_path
@@ -153,6 +185,10 @@ class ShortsGenerator:
             except Exception:
                 pass
 
+        vf_vert = "scale=1080:1920,fps=30"
+        if os.path.exists(os.path.join(short_dir, "subtitles.ass")):
+            vf_vert = "scale=1080:1920,subtitles=subtitles.ass,fps=30"
+
         if os.path.exists(bgm_path):
             cmd = [
                 "ffmpeg", "-y",
@@ -163,7 +199,7 @@ class ShortsGenerator:
                 "-filter_complex", "[1:a]volume=1.0[v_aud];[2:a]volume=0.18[b_aud];[v_aud][b_aud]amix=inputs=2:duration=first:dropout_transition=2[aout]",
                 "-map", "0:v",
                 "-map", "[aout]",
-                "-vf", "scale=1080:1920,fps=30",
+                "-vf", vf_vert,
                 "-c:v", "libx264",
                 "-preset", "veryfast",
                 "-pix_fmt", "yuv420p",
@@ -178,7 +214,7 @@ class ShortsGenerator:
                 "-f", "concat", "-safe", "0",
                 "-i", concat_txt,
                 "-i", audio_path,
-                "-vf", "scale=1080:1920,fps=30",
+                "-vf", vf_vert,
                 "-c:v", "libx264",
                 "-preset", "veryfast",
                 "-pix_fmt", "yuv420p",
@@ -189,7 +225,7 @@ class ShortsGenerator:
             ]
 
         try:
-            subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+            subprocess.run(cmd, cwd=short_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
         except Exception as e:
             print(f"[SHORTS] Erro na montagem com FFmpeg ({e})")
 
