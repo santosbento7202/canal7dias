@@ -110,8 +110,7 @@ class ShortsGenerator:
         ass_path = os.path.join(short_dir, "subtitles.ass")
         srt_to_dynamic_ass(srt_path, ass_path, is_vertical=True)
 
-        # 3. Preparar quadros com arte 4K oficial do Sr. Palito adaptada para vertical (1080x1920)
-        from PIL import Image
+        # 3. Preparar artes 4K oficiais e clipes múltiplos dinâmicos (evita repetição e cortes indevidos)
         art_keys = [
             "sr_palito_steeple.jpg",
             "sr_palito_cufflinks.jpg",
@@ -120,128 +119,132 @@ class ShortsGenerator:
         ]
         chosen_art = art_keys[(short_num - 1) % len(art_keys)]
         art_full_path = os.path.join(PROJECT_ROOT, "assets", "branding", chosen_art)
+        if not os.path.exists(art_full_path):
+            art_full_path = os.path.join(PROJECT_ROOT, "assets", "branding", "sr_palito_power.jpg")
 
-        scene_imgs = []
-        if os.path.exists(art_full_path):
-            base = Image.open(art_full_path).convert("RGB")
-            # Redimensiona para cobrir o centro vertical
-            target_w, target_h = 1080, 1920
-            # Redimensiona mantendo proporção com corte central
-            scale = max(target_w / base.width, target_h / base.height)
-            new_w = int(base.width * scale)
-            new_h = int(base.height * scale)
-            resized = base.resize((new_w, new_h), Image.Resampling.LANCZOS)
-            x0 = (new_w - target_w) // 2
-            y0 = (new_h - target_h) // 2
-            cropped = resized.crop((x0, y0, x0 + target_w, y0 + target_h))
-
-            for i in range(3):
-                frame_png = os.path.join(short_dir, f"frame_{i+1}.png")
-                cropped.save(frame_png, format="PNG")
-                scene_imgs.append(frame_png)
-        else:
-            scenes = [
-                ("A REGRA SILENCIOSA", "confident", "calm", COLOR_WHITE, None),
-                ("NÃO REAJA COM RAIVA", "slouched", "worried", COLOR_GRAY, "xmark"),
-                ("SUSTENTE SEUS LIMITES", "cross", "calm", COLOR_WHITE, None),
-                ("ELES JOGAM. VOCÊ ENXERGA.", "pointing", "calm", COLOR_GOLD, "crown")
+        # 4. Biblioteca de múltiplos clipes por Short (cortes rápidos a cada ~3-4s sem repetição)
+        shorts_multiclips_map = {
+            1: [
+                "assets/broll_cache/napoleon_screaming.mp4",
+                "assets/broll_cache/talleyrand_calm_stare.mp4",
+                "assets/broll_cache/thomas_shelby_smoke.mp4",
+                "assets/broll_cache/talleyrand_smirk.mp4"
+            ],
+            2: [
+                "assets/broll_cache/musashi_samurai_duel.mp4",
+                "assets/broll_cache/napoleon_battle_anger.mp4",
+                "assets/broll_cache/samurai_strike_fast.mp4",
+                "assets/broll_cache/shelby_silence_stare.mp4"
+            ],
+            3: [
+                "assets/broll_cache/american_psycho_sweat.mp4",
+                "assets/broll_cache/hannibal_eye_contact.mp4",
+                "assets/broll_cache/logan_roy_stare.mp4",
+                "assets/broll_cache/fight_club_unreactive.mp4"
             ]
-            for i, (cap, pose, expr, col, acc) in enumerate(scenes):
-                frame_png = os.path.join(short_dir, f"frame_{i+1}.png")
-                self.render_short_frame(cap, pose, expr, col, frame_png, acc)
-                scene_imgs.append(frame_png)
-
-        # 4. Intercalar Narrador e Clipes de Situações/Filmes
-        from src.gif_situations import search_and_download_gif_clip
-        short_situation_map = {
-            1: ("thomas shelby smoke calm", "thomas_shelby_smoke"),
-            2: ("samurai sword duel", "musashi_samurai_duel"),
-            3: ("american psycho sweat nervous", "american_psycho_sweat")
         }
-        sit_info = short_situation_map.get(short_num)
-        sit_clip_path = None
-        if sit_info:
-            sit_clip_path = search_and_download_gif_clip(sit_info[0], sit_info[1], 1080, 1920, 8.0)
+
+        raw_clip_candidates = shorts_multiclips_map.get(short_num, shorts_multiclips_map[1])
+        valid_clips = []
+        for rc in raw_clip_candidates:
+            p = os.path.join(PROJECT_ROOT, rc) if not os.path.isabs(rc) else rc
+            if os.path.exists(p):
+                valid_clips.append(p)
+
+        badge_files = [
+            "narrator_badge_thinking.png",
+            "narrator_badge_official.png",
+            "narrator_badge_power.png"
+        ]
+        badge_name = badge_files[(short_num - 1) % len(badge_files)]
+        badge_path = os.path.join(PROJECT_ROOT, "assets", "branding", badge_name)
 
         anim_vertical_clips = []
-        if sit_clip_path and os.path.exists(sit_clip_path):
-            narr_dur_1 = min(4.0, dur * 0.25)
-            sit_dur = max(4.0, dur * 0.50)
-            narr_dur_2 = max(3.0, dur - narr_dur_1 - sit_dur)
+        if valid_clips:
+            narr_dur_1 = min(3.5, dur * 0.18)
+            narr_dur_2 = min(3.0, dur * 0.15)
+            sit_total_dur = max(4.0, dur - narr_dur_1 - narr_dur_2)
+            per_clip_dur = sit_total_dur / len(valid_clips)
 
-            # A. Narrador Abertura
+            # A. Narrador Abertura (Full-Screen 1080x1920 com fundo desfocado estético, sem cortar a imagem)
             anim_n1 = os.path.join(short_dir, "anim_narr_1.mp4")
-            frames_n1 = int(narr_dur_1 * 30)
             cmd_n1 = [
-                "ffmpeg", "-y", "-i", scene_imgs[0],
-                "-vf", f"scale=1080:1920,zoompan=z='min(zoom+0.0008,1.06)':d={frames_n1}:s=1080x1920:fps=30",
+                "ffmpeg", "-y", "-loop", "1", "-i", art_full_path,
                 "-t", f"{narr_dur_1:.3f}",
+                "-filter_complex",
+                "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=30:5,eq=brightness=-0.25[bg];"
+                "[0:v]scale=1080:-1[fg];"
+                "[bg][fg]overlay=0:(H-h)/2,fps=30[v_out]",
+                "-map", "[v_out]",
                 "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                 anim_n1
             ]
-            subprocess.run(cmd_n1, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            if os.path.exists(anim_n1): anim_vertical_clips.append(anim_n1)
+            r1 = subprocess.run(cmd_n1, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if r1.returncode == 0 and os.path.exists(anim_n1):
+                anim_vertical_clips.append(anim_n1)
 
-            # B. Clipe do Filme/Situação Real com Sr. Palito fixo no canto (Badge Narrador PiP)
-            badge_files = [
-                "narrator_badge_thinking.png",
-                "narrator_badge_official.png",
-                "narrator_badge_power.png"
-            ]
-            badge_name = badge_files[(short_num - 1) % len(badge_files)]
-            badge_path = os.path.join(PROJECT_ROOT, "assets", "branding", badge_name)
+            # B. Sequência de Múltiplos Clipes Variados (Sem cortar o vídeo e com badge no canto)
+            for idx, c_path in enumerate(valid_clips):
+                part_path = os.path.join(short_dir, f"sit_vert_{idx+1}.mp4")
+                if os.path.exists(badge_path):
+                    cmd_c = [
+                        "ffmpeg", "-y", "-stream_loop", "3", "-i", c_path, "-i", badge_path,
+                        "-t", f"{per_clip_dur:.3f}",
+                        "-filter_complex",
+                        "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=25:5,eq=brightness=-0.25[bg];"
+                        "[0:v]scale=1080:-1[fg];"
+                        "[bg][fg]overlay=0:(H-h)/2[comp];"
+                        "[1:v]scale=220:220[badge];"
+                        "[comp][badge]overlay=W-w-35:H-h-240[v_out]",
+                        "-map", "[v_out]",
+                        "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                        part_path
+                    ]
+                else:
+                    cmd_c = [
+                        "ffmpeg", "-y", "-stream_loop", "3", "-i", c_path,
+                        "-t", f"{per_clip_dur:.3f}",
+                        "-filter_complex",
+                        "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=25:5,eq=brightness=-0.25[bg];"
+                        "[0:v]scale=1080:-1[fg];"
+                        "[bg][fg]overlay=0:(H-h)/2,fps=30[v_out]",
+                        "-map", "[v_out]",
+                        "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                        part_path
+                    ]
+                rc = subprocess.run(cmd_c, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                if rc.returncode == 0 and os.path.exists(part_path):
+                    anim_vertical_clips.append(part_path)
 
-            sit_vert = os.path.join(short_dir, "sit_vert.mp4")
-            if os.path.exists(badge_path):
-                cmd_sv = [
-                    "ffmpeg", "-y", "-stream_loop", "3", "-i", sit_clip_path, "-i", badge_path,
-                    "-t", f"{sit_dur:.3f}",
-                    "-filter_complex", "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30[bg];[1:v]scale=250:250[badge];[bg][badge]overlay=W-w-40:H-h-260[v_out]",
-                    "-map", "[v_out]",
-                    "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
-                    sit_vert
-                ]
-            else:
-                cmd_sv = [
-                    "ffmpeg", "-y", "-stream_loop", "3", "-i", sit_clip_path,
-                    "-t", f"{sit_dur:.3f}",
-                    "-vf", "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30",
-                    "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
-                    sit_vert
-                ]
-            subprocess.run(cmd_sv, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            if os.path.exists(sit_vert): anim_vertical_clips.append(sit_vert)
-
-            # C. Narrador Fechamento
+            # C. Narrador Fechamento (Full-Screen 1080x1920 com fundo desfocado, sem corte)
             anim_n2 = os.path.join(short_dir, "anim_narr_2.mp4")
-            frames_n2 = int(narr_dur_2 * 30)
             cmd_n2 = [
-                "ffmpeg", "-y", "-i", scene_imgs[-1],
-                "-vf", f"scale=1080:1920,zoompan=z='min(zoom+0.0008,1.06)':d={frames_n2}:s=1080x1920:fps=30",
+                "ffmpeg", "-y", "-loop", "1", "-i", art_full_path,
                 "-t", f"{narr_dur_2:.3f}",
+                "-filter_complex",
+                "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=30:5,eq=brightness=-0.25[bg];"
+                "[0:v]scale=1080:-1[fg];"
+                "[bg][fg]overlay=0:(H-h)/2,fps=30[v_out]",
+                "-map", "[v_out]",
                 "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                 anim_n2
             ]
-            subprocess.run(cmd_n2, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            if os.path.exists(anim_n2): anim_vertical_clips.append(anim_n2)
+            r2 = subprocess.run(cmd_n2, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if r2.returncode == 0 and os.path.exists(anim_n2):
+                anim_vertical_clips.append(anim_n2)
         else:
-            dur_per_scene = dur / len(scene_imgs)
-            for idx, spath in enumerate(scene_imgs):
-                anim_clip_path = os.path.join(short_dir, f"anim_vert_{idx+1}.mp4")
-                frames = int(dur_per_scene * 30)
-                cmd_anim = [
-                    "ffmpeg", "-y",
-                    "-i", spath,
-                    "-vf", f"scale=1080:1920,zoompan=z='min(zoom+0.0008,1.06)':d={frames}:s=1080x1920:fps=30",
-                    "-t", f"{dur_per_scene:.3f}",
-                    "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
-                    anim_clip_path
-                ]
-                res = subprocess.run(cmd_anim, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                if res.returncode == 0 and os.path.exists(anim_clip_path):
-                    anim_vertical_clips.append(anim_clip_path)
-                else:
-                    anim_vertical_clips.append(spath)
+            anim_clip_path = os.path.join(short_dir, "anim_vert_fallback.mp4")
+            cmd_anim = [
+                "ffmpeg", "-y", "-loop", "1",
+                "-i", art_full_path,
+                "-vf", "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30",
+                "-t", f"{dur:.3f}",
+                "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                anim_clip_path
+            ]
+            res = subprocess.run(cmd_anim, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if res.returncode == 0 and os.path.exists(anim_clip_path):
+                anim_vertical_clips.append(anim_clip_path)
 
         concat_txt = os.path.join(short_dir, "concat.txt")
         with open(concat_txt, "w") as f:
