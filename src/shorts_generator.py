@@ -113,10 +113,10 @@ class ShortsGenerator:
         # 3. Preparar quadros com arte 4K oficial do Sr. Palito adaptada para vertical (1080x1920)
         from PIL import Image
         art_keys = [
-            "sr_palito_pointing.jpg",
-            "sr_palito_thinking.jpg",
-            "sr_palito_power.jpg",
-            "sr_palito_official_fullbody.jpg"
+            "sr_palito_steeple.jpg",
+            "sr_palito_cufflinks.jpg",
+            "sr_palito_skyscraper.jpg",
+            "sr_palito_blueprint.jpg"
         ]
         chosen_art = art_keys[(short_num - 1) % len(art_keys)]
         art_full_path = os.path.join(PROJECT_ROOT, "assets", "branding", chosen_art)
@@ -154,9 +154,9 @@ class ShortsGenerator:
         # 4. Intercalar Narrador e Clipes de Situações/Filmes
         from src.gif_situations import search_and_download_gif_clip
         short_situation_map = {
-            1: ("napoleon angry", "napoleon_screaming"),
+            1: ("thomas shelby smoke calm", "thomas_shelby_smoke"),
             2: ("samurai sword duel", "musashi_samurai_duel"),
-            3: ("roman emperor", "julius_caesar_power")
+            3: ("american psycho sweat nervous", "american_psycho_sweat")
         }
         sit_info = short_situation_map.get(short_num)
         sit_clip_path = None
