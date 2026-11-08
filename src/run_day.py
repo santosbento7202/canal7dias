@@ -309,6 +309,13 @@ def run_pipeline_for_day(day_number: int, dry_run: bool = False) -> bool:
     os.makedirs(out_day_dir, exist_ok=True)
 
     # ----------------------------------------------------
+    # PORTÃO 0: Loop de Retroalimentação de Views (Analytics)
+    # ----------------------------------------------------
+    from src.channel_analytics import record_daily_analytics_check
+    analytics_eval = record_daily_analytics_check()
+    adaptations = analytics_eval.get("adaptations", {})
+
+    # ----------------------------------------------------
     # PORTÃO 1: title.py (Título e Thumbnail)
     # ----------------------------------------------------
     print("\n>>> [PORTÃO 1] Validando par Título + Thumbnail...")
@@ -332,6 +339,9 @@ def run_pipeline_for_day(day_number: int, dry_run: bool = False) -> bool:
     scored_hooks = []
     for h in script_data.get("hooks", []):
         sc = score_hook(h["text"])
+        # Se views estiverem baixas no canal, bonificar fórmulas de choque/ameaça (+15 pts) para aumentar CTR
+        if analytics_eval.get("is_low") and h.get("formula") in ("The Mistake", "Contrarian Flip"):
+            sc += 15
         scored_hooks.append((sc, h))
         print(f"  Hook '{h['formula']}': {sc} pontos -> \"{h['text'][:60]}...\"")
 
@@ -490,9 +500,10 @@ def run_pipeline_for_day(day_number: int, dry_run: bool = False) -> bool:
         except Exception:
             f_badge = f_main = ImageFont.load_default()
 
-        # Badge vermelho superior: "7 REGRAS"
-        badge_text = "7 REGRAS SILENCIOSAS"
-        t_draw.rectangle([70, 70, 460, 125], fill=(220, 20, 20))
+        # Badge superior adaptativo (injeta alerta de urgência se views baixas)
+        badge_text = adaptations.get("thumb_badge_text", "7 REGRAS SILENCIOSAS")
+        badge_color = adaptations.get("thumb_badge_color", (220, 20, 20))
+        t_draw.rectangle([70, 70, 480, 125], fill=badge_color)
         t_draw.text((85, 78), badge_text, fill=(255, 255, 255), font=f_badge)
 
         # Texto principal: "PARE DE AGRADAR" em amarelo ouro com contorno preto espesso
@@ -540,6 +551,13 @@ def run_pipeline_for_day(day_number: int, dry_run: bool = False) -> bool:
     full_description = "\n".join(desc_lines)
     tags = script_data.get("tags", [])[:15]
     pinned_comment = script_data.get("pinned_comment", "")
+    if analytics_eval.get("is_low"):
+        pinned_comment = (
+            "QUAL DESSAS SITUAÇÕES VOCÊ MAIS ENFRENTA NO DIA A DIA?\n"
+            "1) Pessoas tentando te interromper no meio da fala\n"
+            "2) Grosserias gratuitas disfarçadas de 'brincadeira'\n"
+            "Comente 1 ou 2 abaixo para o Código Social analisar sua resposta."
+        )
 
     # Exportar Modo Semi-Auto
     export_semi_auto_package(

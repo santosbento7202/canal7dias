@@ -78,7 +78,7 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add config/topics_queue.json out/broll_licenses.jsonl reports/progress.md || true
+          git add config/topics_queue.json out/broll_licenses.jsonl reports/progress.md reports/channel_metrics.json || true
           if git diff --staged --quiet; then
             echo "Nenhuma alteracao para commitar."
           else
