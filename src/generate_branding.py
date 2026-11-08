@@ -29,15 +29,16 @@ def generate_avatar(out_path: str) -> str:
     canvas = renderer.create_canvas(w, h, spotlight=(0.5, 0.45, 0.45))
     sf = renderer.sf
 
-    # Stickman centralizado
+    # Sr. Palito centralizado
     fig = Fig(
         x=400,
-        y=590,
-        scale=1.75,
+        y=610,
+        scale=1.6,
         pose="confident",
-        expression="calm",
+        expression="smirk",
         color=COLOR_WHITE,
         head_accessory="crown",
+        is_sr_palito=True,
         facing=1
     )
     renderer.draw_figure(canvas, fig)
@@ -75,15 +76,16 @@ def generate_banner(out_path: str) -> str:
     safe_y2 = safe_y1 + safe_h   # 931
     safe_cy = (safe_y1 + safe_y2) // 2
 
-    # Dois stickmans nas laterais da safe area
+    # Dois stickmans nas laterais da safe area (Sr. Palito à esquerda)
     fig_left = Fig(
         x=safe_x1 + 180,
         y=safe_y2 - 30,
-        scale=1.2,
+        scale=1.15,
         pose="confident",
-        expression="calm",
+        expression="smirk",
         color=COLOR_WHITE,
         head_accessory="crown",
+        is_sr_palito=True,
         facing=1
     )
     fig_right = Fig(

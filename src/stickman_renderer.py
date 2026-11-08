@@ -55,12 +55,13 @@ class Fig:
     y: float  # Ground/feet y coordinate
     scale: float = 1.0
     pose: str = "confident"  # confident, slouched, shouting, thinking, pointing, arms_wide, offer_left, cross, walking
-    expression: str = "calm"  # smile, fake_smile, smirk, angry, worried, calm, neutral
+    expression: str = "smirk"  # smile, fake_smile, smirk, angry, worried, calm, neutral
     color: Tuple[int, int, int] = COLOR_WHITE
     glow_color: Optional[Tuple[int, int, int, int]] = (255, 255, 255, 90)
     facing: int = 1  # 1: right, -1: left
-    head_accessory: Optional[str] = None  # e.g. "crown"
+    head_accessory: Optional[str] = None  # e.g. "crown", "brain"
     body_accessory: Optional[str] = None  # e.g. "xmark", "scissors", "mirror", "phone", "lightning_eye"
+    is_sr_palito: bool = False  # Mascote oficial Sr. Palito (Mr. Stick)
 
 @dataclass
 class Accessory:
@@ -314,15 +315,29 @@ class StickmanRenderer:
             draw_fig.line([chest_x, chest_y, left_hand[0], left_hand[1]], fill=c, width=stroke_w)
             draw_fig.line([chest_x, chest_y, right_hand[0], right_hand[1]], fill=c, width=stroke_w)
 
-        # Head (filled black with thick glowing stroke)
-        draw_fig.ellipse([head_x - head_r, head_y - head_r, head_x + head_r, head_y + head_r], fill=(0, 0, 0, 255), outline=c, width=stroke_w)
-        
-        # Expressive face
-        self.draw_face(draw_fig, head_x, head_y, head_r, fig.expression, f, c)
-
-        # Head Accessory (e.g. Floating Crown)
-        if fig.head_accessory == "crown":
-            self.draw_crown(draw_fig, head_x, head_y - head_r - 18 * scale, scale)
+        # Head (solid white head with sleek black inner facial area for Sr. Palito, or thick stroke outline)
+        if fig.is_sr_palito:
+            # 1. Perfectly round solid white head
+            draw_fig.ellipse([head_x - head_r, head_y - head_r, head_x + head_r, head_y + head_r], fill=(255, 255, 255, 255))
+            # 2. Sleek black facial area inside
+            inner_r = head_r * 0.82
+            draw_fig.ellipse([head_x - inner_r, head_y - inner_r, head_x + inner_r, head_y + inner_r], fill=(0, 0, 0, 255))
+            # 3. Sr. Palito face: intensely expressive glowing white eyes, sharp mischievous eyebrows, calculating smirk
+            self.draw_sr_palito_face(draw_fig, head_x, head_y, head_r, f)
+            # 4. Razor-sharp crimson red bow tie (#FF2A2A) at neck
+            self.draw_bow_tie(draw_fig, neck_x, neck_y + 4 * scale, scale)
+            # 5. Magnificent holographic golden brain (#FFD700) with crown floating directly above head
+            brain_cy = head_y - head_r - 20 * scale
+            self.draw_golden_brain(draw_fig, head_x, brain_cy, scale)
+            self.draw_crown(draw_fig, head_x, brain_cy - 16 * scale, scale * 0.8)
+        else:
+            # Standard stickman head (filled black with thick glowing stroke)
+            draw_fig.ellipse([head_x - head_r, head_y - head_r, head_x + head_r, head_y + head_r], fill=(0, 0, 0, 255), outline=c, width=stroke_w)
+            # Expressive face
+            self.draw_face(draw_fig, head_x, head_y, head_r, fig.expression, f, c)
+            # Head Accessory (e.g. Floating Crown)
+            if fig.head_accessory == "crown":
+                self.draw_crown(draw_fig, head_x, head_y - head_r - 18 * scale, scale)
 
         # Body Accessory
         if fig.body_accessory == "xmark":
@@ -340,6 +355,60 @@ class StickmanRenderer:
             self.draw_lightning_eye(draw_fig, head_x, head_y, f, scale)
 
         img.paste(fig_layer, (0, 0), fig_layer)
+
+    def draw_sr_palito_face(self, draw: ImageDraw.ImageDraw, hx: float, hy: float, hr: float, facing: int):
+        """Intensely expressive white glowing eyes, sharp mischievous eyebrows and confident calculating smirk."""
+        f = facing
+        eye_y = hy - hr * 0.12
+        eye_spacing = hr * 0.42
+        eye_w = max(3, int(4.5 * self.sf))
+        eye_h = max(2, int(2.5 * self.sf))
+
+        left_eye_x = hx - eye_spacing * 0.5 + f * hr * 0.08
+        right_eye_x = hx + eye_spacing * 0.5 + f * hr * 0.08
+        mouth_y = hy + hr * 0.38
+
+        # Sharp mischievous diagonal eyebrows (angled aggressively inward)
+        eb_w = int(2.5 * self.sf)
+        draw.line([left_eye_x - 5 * self.sf, eye_y - 7 * self.sf, left_eye_x + 6 * self.sf, eye_y - 3 * self.sf], fill=COLOR_WHITE, width=eb_w)
+        draw.line([right_eye_x - 6 * self.sf, eye_y - 3 * self.sf, right_eye_x + 5 * self.sf, eye_y - 7 * self.sf], fill=COLOR_WHITE, width=eb_w)
+
+        # Intensely glowing white eyes (slightly almond shaped)
+        draw.ellipse([left_eye_x - eye_w, eye_y - eye_h, left_eye_x + eye_w, eye_y + eye_h], fill=COLOR_WHITE)
+        draw.ellipse([right_eye_x - eye_w, eye_y - eye_h, right_eye_x + eye_w, eye_y + eye_h], fill=COLOR_WHITE)
+
+        # Confident calculating smirk (raised cunningly on one side)
+        mx0 = hx - hr * 0.25 if f == 1 else hx - hr * 0.1
+        mx1 = hx + hr * 0.55 if f == 1 else hx + hr * 0.35
+        draw.arc([min(mx0, mx1), mouth_y - hr * 0.3, max(mx0, mx1), mouth_y + hr * 0.2], start=0, end=180, fill=COLOR_WHITE, width=int(2.5 * self.sf))
+
+    def draw_bow_tie(self, draw: ImageDraw.ImageDraw, nx: float, ny: float, scale: float):
+        """Razor-sharp crimson red bow tie (#FF2A2A) with center knot."""
+        bw = 18 * scale
+        bh = 9 * scale
+        # Left wing razor triangle
+        draw.polygon([(nx, ny), (nx - bw, ny - bh), (nx - bw * 0.85, ny + bh)], fill=COLOR_RED)
+        # Right wing razor triangle
+        draw.polygon([(nx, ny), (nx + bw, ny - bh), (nx + bw * 0.85, ny + bh)], fill=COLOR_RED)
+        # Center geometric knot with subtle highlight
+        kw = 4 * scale
+        draw.rectangle([nx - kw, ny - bh * 0.6, nx + kw, ny + bh * 0.6], fill=(220, 20, 20), outline=COLOR_RED, width=int(self.sf))
+
+    def draw_golden_brain(self, draw: ImageDraw.ImageDraw, cx: float, cy: float, scale: float):
+        """Magnificent holographic golden brain (#FFD700) with intricate glowing neural connections."""
+        bw = 26 * scale
+        bh = 17 * scale
+        # Golden neural brain lobes
+        draw.ellipse([cx - bw, cy - bh, cx, cy + bh], fill=(35, 30, 0), outline=COLOR_GOLD, width=int(2.5 * self.sf))
+        draw.ellipse([cx, cy - bh, cx + bw, cy + bh], fill=(35, 30, 0), outline=COLOR_GOLD, width=int(2.5 * self.sf))
+        # Intricate gyri neural connection arcs
+        draw.arc([cx - bw * 0.75, cy - bh * 0.55, cx - bw * 0.1, cy + bh * 0.35], start=40, end=280, fill=COLOR_GOLD, width=int(2.0 * self.sf))
+        draw.arc([cx + bw * 0.1, cy - bh * 0.55, cx + bw * 0.75, cy + bh * 0.35], start=260, end=140, fill=COLOR_GOLD, width=int(2.0 * self.sf))
+        draw.arc([cx - bw * 0.5, cy - bh * 0.15, cx + bw * 0.5, cy + bh * 0.65], start=180, end=360, fill=COLOR_GOLD, width=int(2.0 * self.sf))
+        # Synaptic glowing sparks
+        sr = max(1, int(2.5 * scale))
+        for px, py in [(cx - bw * 0.55, cy - bh * 0.3), (cx + bw * 0.55, cy - bh * 0.3), (cx, cy), (cx - bw * 0.3, cy + bh * 0.4), (cx + bw * 0.3, cy + bh * 0.4)]:
+            draw.ellipse([px - sr, py - sr, px + sr, py + sr], fill=COLOR_WHITE)
 
     def draw_crown(self, draw: ImageDraw.ImageDraw, cx: float, cy: float, scale: float):
         """Floating 3-pointed golden crown with jewels."""
@@ -529,21 +598,21 @@ class StickmanRenderer:
         accessories = []
 
         if "vs" in visual_type or "curvado" in visual_type:
-            # Day 1 style: Slouched with X vs confident with Crown
+            # Day 1 style: Slouched with X vs Sr. Palito confident
             fig_errado = Fig(
                 x=320, y=520, scale=1.35, pose="slouched", expression="fake_smile",
                 color=COLOR_GRAY, body_accessory="xmark", facing=1
             )
             fig_certo = Fig(
-                x=960, y=520, scale=1.35, pose="confident", expression="calm",
-                color=COLOR_WHITE, head_accessory="crown", facing=-1
+                x=960, y=520, scale=1.35, pose="confident", expression="smirk",
+                color=COLOR_WHITE, head_accessory="crown", is_sr_palito=True, facing=-1
             )
             figures = [fig_errado, fig_certo]
         elif "pés" in visual_type or "pes" in visual_type:
             # Day 2 style: liar smiling with arrow pointing to feet
             fig = Fig(
                 x=640, y=520, scale=1.4, pose="confident", expression="smirk",
-                color=COLOR_WHITE, facing=1
+                color=COLOR_WHITE, is_sr_palito=True, facing=1
             )
             figures = [fig]
             accessories.append(Accessory(kind="arrow", x1=400, y1=450, x2=580, y2=520, color=COLOR_GOLD))
@@ -554,8 +623,8 @@ class StickmanRenderer:
                 color=COLOR_RED, facing=1
             )
             fig2 = Fig(
-                x=950, y=520, scale=1.35, pose="confident", expression="calm",
-                color=COLOR_WHITE, body_accessory="mirror", facing=-1
+                x=950, y=520, scale=1.35, pose="confident", expression="smirk",
+                color=COLOR_WHITE, body_accessory="mirror", is_sr_palito=True, facing=-1
             )
             figures = [fig1, fig2]
         elif "tesoura" in visual_type or "amigo" in visual_type:
@@ -565,32 +634,32 @@ class StickmanRenderer:
                 color=COLOR_GRAY, body_accessory="scissors", facing=1
             )
             fig2 = Fig(
-                x=860, y=520, scale=1.35, pose="offer_left", expression="calm",
-                color=COLOR_WHITE, facing=-1
+                x=860, y=520, scale=1.35, pose="offer_left", expression="smirk",
+                color=COLOR_WHITE, is_sr_palito=True, facing=-1
             )
             figures = [fig1, fig2]
         elif "vácuo" in visual_type or "vacuo" in visual_type or "correndo" in visual_type:
-            # Day 5 style: figures chasing 1 confident figure
+            # Day 5 style: figures chasing Sr. Palito
             f1 = Fig(x=200, y=530, scale=1.0, pose="walking", expression="worried", color=COLOR_GRAY, facing=1)
             f2 = Fig(x=340, y=530, scale=1.0, pose="walking", expression="worried", color=COLOR_GRAY, facing=1)
             f3 = Fig(x=480, y=530, scale=1.0, pose="walking", expression="worried", color=COLOR_GRAY, facing=1)
-            leader = Fig(x=950, y=520, scale=1.35, pose="confident", expression="calm", color=COLOR_WHITE, head_accessory="crown", facing=1)
+            leader = Fig(x=950, y=520, scale=1.35, pose="confident", expression="smirk", color=COLOR_WHITE, head_accessory="crown", is_sr_palito=True, facing=1)
             figures = [f1, f2, f3, leader]
-        elif "espelho" in visual_type or "fio" in visual_type:
-            # Day 6 style: 2 identical figures synchronized with gold dotted line
-            fig1 = Fig(x=360, y=520, scale=1.35, pose="confident", expression="calm", color=COLOR_WHITE, facing=1)
-            fig2 = Fig(x=920, y=520, scale=1.35, pose="confident", expression="calm", color=COLOR_WHITE, facing=-1)
+        elif "fio" in visual_type:
+            # Day 6 style: Sr. Palito with synchronized figure
+            fig1 = Fig(x=360, y=520, scale=1.35, pose="confident", expression="smirk", color=COLOR_WHITE, is_sr_palito=True, facing=1)
+            fig2 = Fig(x=920, y=520, scale=1.35, pose="confident", expression="smirk", color=COLOR_WHITE, is_sr_palito=True, facing=-1)
             figures = [fig1, fig2]
             accessories.append(Accessory(kind="dotted", x1=360, y1=380, x2=920, y2=380, color=COLOR_GOLD))
         elif "marionete" in visual_type or "fios" in visual_type:
-            # Day 7 style: Puppet cross with stickman cutting threads
-            hero = Fig(x=640, y=520, scale=1.4, pose="confident", expression="calm", color=COLOR_WHITE, body_accessory="scissors", facing=1)
+            # Day 7 style: Puppet cross with Sr. Palito cutting threads
+            hero = Fig(x=640, y=520, scale=1.4, pose="confident", expression="smirk", color=COLOR_WHITE, body_accessory="scissors", is_sr_palito=True, facing=1)
             figures = [hero]
             accessories.append(Accessory(kind="marionette", x1=400, y1=80, x2=880, y2=450, color=COLOR_RED))
         else:
             # Default strong contrast
             fig1 = Fig(x=360, y=520, scale=1.35, pose="slouched", expression="worried", color=COLOR_GRAY, facing=1)
-            fig2 = Fig(x=920, y=520, scale=1.35, pose="confident", expression="calm", color=COLOR_WHITE, head_accessory="crown", facing=-1)
+            fig2 = Fig(x=920, y=520, scale=1.35, pose="confident", expression="smirk", color=COLOR_WHITE, head_accessory="crown", is_sr_palito=True, facing=-1)
             figures = [fig1, fig2]
 
         # Spotlight behind center

@@ -67,6 +67,7 @@ class ShortsGenerator:
             color=color,
             head_accessory="crown" if color == COLOR_WHITE else None,
             body_accessory=accessory_kind,
+            is_sr_palito=(color == COLOR_WHITE),
             facing=1
         )
         accessories = []

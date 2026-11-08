@@ -241,9 +241,10 @@ def run_pipeline_for_day(day_number: int, dry_run: bool = False) -> bool:
             y=760,
             scale=1.4,
             pose=s.get("fig_pose", "confident"),
-            expression=s.get("fig_expression", "calm"),
+            expression=s.get("fig_expression", "smirk"),
             color=COLOR_WHITE,
-            head_accessory="crown" if s.get("fig_pose") == "confident" else None,
+            head_accessory="crown",
+            is_sr_palito=True,
             facing=1
         )
         img = renderer.render_scene(
