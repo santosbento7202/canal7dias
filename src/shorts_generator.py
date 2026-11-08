@@ -119,33 +119,74 @@ class ShortsGenerator:
             self.render_short_frame(cap, pose, expr, col, frame_png, acc)
             scene_imgs.append(frame_png)
 
-        # 3. Montar vídeo vertical com FFmpeg
-        # Cada imagem dura dur / len(scenes) segundos
+        # 3. Montar vídeo vertical com Ken Burns zoompan dinâmico
         dur_per_scene = dur / len(scene_imgs)
+        anim_vertical_clips = []
+        for idx, spath in enumerate(scene_imgs):
+            anim_clip_path = os.path.join(short_dir, f"anim_vert_{idx+1}.mp4")
+            frames = int(dur_per_scene * 30)
+            cmd_anim = [
+                "ffmpeg", "-y",
+                "-i", spath,
+                "-vf", f"scale=1080:1920,zoompan=z='min(zoom+0.0010,1.06)':d={frames}:s=1080x1920:fps=30",
+                "-t", f"{dur_per_scene:.3f}",
+                "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                anim_clip_path
+            ]
+            res = subprocess.run(cmd_anim, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if res.returncode == 0 and os.path.exists(anim_clip_path):
+                anim_vertical_clips.append(anim_clip_path)
+            else:
+                anim_vertical_clips.append(spath)
+
         concat_txt = os.path.join(short_dir, "concat.txt")
         with open(concat_txt, "w") as f:
-            for p in scene_imgs:
+            for p in anim_vertical_clips:
                 escaped = p.replace("\\", "/")
                 f.write(f"file '{escaped}'\n")
-                f.write(f"duration {dur_per_scene:.3f}\n")
-            # Repetir o último arquivo por convenção do concat demuxer do ffmpeg
-            last_img = scene_imgs[-1].replace("\\", "/")
-            f.write(f"file '{last_img}'\n")
 
-        cmd = [
-            "ffmpeg", "-y",
-            "-f", "concat", "-safe", "0",
-            "-i", concat_txt,
-            "-i", audio_path,
-            "-vf", "scale=1080:1920,fps=30",
-            "-c:v", "libx264",
-            "-preset", "veryfast",
-            "-pix_fmt", "yuv420p",
-            "-c:a", "aac",
-            "-b:a", "128k",
-            "-shortest",
-            out_mp4
-        ]
+        bgm_path = os.path.join(PROJECT_ROOT, "assets", "audio", "dark_ambient_drone.wav")
+        if not os.path.exists(bgm_path):
+            try:
+                from src.audio_ambient import ensure_dark_ambient_bgm
+                ensure_dark_ambient_bgm(60.0, bgm_path)
+            except Exception:
+                pass
+
+        if os.path.exists(bgm_path):
+            cmd = [
+                "ffmpeg", "-y",
+                "-f", "concat", "-safe", "0",
+                "-i", concat_txt,
+                "-i", audio_path,
+                "-stream_loop", "-1", "-i", bgm_path,
+                "-filter_complex", "[1:a]volume=1.0[v_aud];[2:a]volume=0.18[b_aud];[v_aud][b_aud]amix=inputs=2:duration=first:dropout_transition=2[aout]",
+                "-map", "0:v",
+                "-map", "[aout]",
+                "-vf", "scale=1080:1920,fps=30",
+                "-c:v", "libx264",
+                "-preset", "veryfast",
+                "-pix_fmt", "yuv420p",
+                "-c:a", "aac",
+                "-b:a", "128k",
+                "-shortest",
+                out_mp4
+            ]
+        else:
+            cmd = [
+                "ffmpeg", "-y",
+                "-f", "concat", "-safe", "0",
+                "-i", concat_txt,
+                "-i", audio_path,
+                "-vf", "scale=1080:1920,fps=30",
+                "-c:v", "libx264",
+                "-preset", "veryfast",
+                "-pix_fmt", "yuv420p",
+                "-c:a", "aac",
+                "-b:a", "128k",
+                "-shortest",
+                out_mp4
+            ]
 
         try:
             subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)

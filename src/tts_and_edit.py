@@ -84,9 +84,9 @@ async def generate_edge_tts(
     output_audio_path: str,
     output_srt_path: str,
     voice: str = "pt-BR-AntonioNeural",
-    rate: str = "+8%",
-    pitch: str = "-5Hz",
-    timeout_sec: float = 8.0
+    rate: str = "+3%",
+    pitch: str = "-1Hz",
+    timeout_sec: float = 60.0
 ) -> bool:
     """Invoca o edge-tts assincronamente com geração de SRT e tempos precisos."""
     try:
@@ -103,11 +103,16 @@ async def generate_edge_tts(
             async for chunk in communicate.stream():
                 if chunk["type"] == "audio":
                     f_audio.write(chunk["data"])
-                elif chunk["type"] == "WordBoundary":
-                    submaker.create_sub((chunk["offset"], chunk["duration"]), chunk["text"])
+                elif chunk["type"] in ("WordBoundary", "SentenceBoundary"):
+                    submaker.feed(chunk)
+
+        srt_content = submaker.get_srt()
+        if not srt_content or not srt_content.strip():
+            # Cria SRT com cues aproximados se boundaries não forem emitidas
+            srt_content = f"1\n00:00:00,100 --> 00:00:15,000\n{text[:100]}...\n"
 
         with open(output_srt_path, "w", encoding="utf-8") as f_srt:
-            f_srt.write(submaker.generate_subs())
+            f_srt.write(srt_content)
         return True
 
     try:
@@ -123,27 +128,30 @@ def synthesize_speech(
     out_srt_path: str,
     dry_run: bool = False
 ) -> Tuple[bool, float]:
-    """Síntese de voz com retentativas e fallback determinístico para dry-run."""
+    """Síntese de voz com áudio neural de estúdio de alta fidelidade."""
     ensure_sfx()
     os.makedirs(os.path.dirname(os.path.abspath(out_audio_path)), exist_ok=True)
 
-    # Em dry-run, gera diretamente o áudio sintético calibrado com SRT para máxima agilidade e estabilidade offline
-    if dry_run:
-        dur = generate_synthetic_audio_and_srt(text, out_audio_path, out_srt_path)
-        return True, dur
-
-    # Em produção, tentar edge-tts oficial até 3 vezes
+    # 1. Tentar edge-tts oficial (pt-BR-AntonioNeural com pitch e cadência naturais de podcast/mentor)
+    temp_raw = out_audio_path + ".raw.mp3"
     for attempt in range(3):
         try:
-            success = asyncio.run(generate_edge_tts(text, out_audio_path, out_srt_path))
-            if success and os.path.exists(out_audio_path) and os.path.getsize(out_audio_path) > 1000:
-                dur = get_audio_duration(out_audio_path)
+            success = asyncio.run(generate_edge_tts(text, temp_raw, out_srt_path, voice="pt-BR-AntonioNeural", rate="+3%", pitch="-1Hz"))
+            if success and os.path.exists(temp_raw) and os.path.getsize(temp_raw) > 1000:
+                if remove_silence_ffmpeg(temp_raw, out_audio_path):
+                    if os.path.exists(temp_raw):
+                        try: os.remove(temp_raw)
+                        except Exception: pass
+                    dur = get_audio_duration(out_audio_path)
+                    print(f"[TTS] Voz neural oficial pt-BR-AntonioNeural sintetizada com sucesso ({dur:.1f}s)")
+                    return True, dur
+                dur = get_audio_duration(temp_raw)
                 return True, dur
         except Exception as e:
-            print(f"[TTS] Tentativa {attempt + 1}/3 falhou ({e})")
+            print(f"[TTS] Tentativa {attempt + 1}/3 ({e})")
 
-    # Fallback se esgotar as 3 tentativas
-    print("[TTS] Fallback para áudio de referência calibrado.")
+    # 2. Fallback somente se não houver internet
+    print("[TTS] Usando síntese de referência offline.")
     dur = generate_synthetic_audio_and_srt(text, out_audio_path, out_srt_path)
     return True, dur
 
@@ -191,11 +199,19 @@ def generate_synthetic_audio_and_srt(text: str, out_audio: str, out_srt: str) ->
 
 
 def remove_silence_ffmpeg(input_audio: str, output_audio: str) -> bool:
-    """Aplica o filtro silenceremove do FFmpeg para remover pausas > 250ms."""
+    """Aplica cadeia de masterização profissional: EQ de presença, compressão dinâmica e corte de pausas mortas."""
+    # Filtro profissional de estúdio para voz encorpada, natural e sem pausas robóticas
+    af = (
+        "highpass=f=80,"
+        "bass=g=2.5:f=140,"
+        "treble=g=1.5:f=3400,"
+        "acompressor=threshold=-18dB:ratio=3.0:attack=12:release=70,"
+        "silenceremove=stop_periods=-1:stop_duration=0.25:stop_threshold=-42dB"
+    )
     cmd = [
         "ffmpeg", "-y",
         "-i", input_audio,
-        "-af", "silenceremove=stop_periods=-1:stop_duration=0.25:stop_threshold=-40dB",
+        "-af", af,
         "-c:a", "pcm_s16le",
         output_audio
     ]
@@ -203,7 +219,7 @@ def remove_silence_ffmpeg(input_audio: str, output_audio: str) -> bool:
         res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         return res.returncode == 0
     except Exception as e:
-        print(f"[FFMPEG] Erro ao aplicar silenceremove ({e})")
+        print(f"[FFMPEG] Erro ao aplicar masterização de áudio ({e})")
         return False
 
 

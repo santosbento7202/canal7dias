@@ -102,34 +102,86 @@ def assemble_video_ffmpeg(
     output_mp4: str,
     total_duration: float
 ) -> bool:
-    """Monta o vídeo 1920x1080 com H.264/AAC, inserções de broll e imagens stickman."""
-    # Lista de arquivos para concatenação
-    concat_txt = os.path.join(os.path.dirname(output_mp4), "scenes_concat.txt")
+    """Monta vídeo ultra dinâmico 1920x1080 com Ken Burns zoompan (4-6%), inserções de B-roll e áudio estúdio."""
+    work_dir = os.path.dirname(output_mp4)
     n_scenes = len(scene_images)
     dur_per_scene = total_duration / max(1, n_scenes)
 
+    # 1. Animar cada cena com Ken Burns push-in suave (elimina imagem estática)
+    animated_video_clips = []
+    for i, img_path in enumerate(scene_images):
+        anim_path = os.path.join(work_dir, f"anim_scene_{i+1}.mp4")
+        frames = int(dur_per_scene * 30)
+        cmd_anim = [
+            "ffmpeg", "-y",
+            "-i", img_path,
+            "-vf", f"scale=1920:1080,zoompan=z='min(zoom+0.0010,1.05)':d={frames}:s=1920x1080:fps=30",
+            "-t", f"{dur_per_scene:.3f}",
+            "-c:v", "libx264",
+            "-preset", "veryfast",
+            "-pix_fmt", "yuv420p",
+            anim_path
+        ]
+        res = subprocess.run(cmd_anim, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if res.returncode == 0 and os.path.exists(anim_path):
+            animated_video_clips.append(anim_path)
+            # Inserir cutaway dinâmico de B-roll após a abertura (cena 1) e na metade (cena 4)
+            if i == 0 and len(broll_clips) > 0:
+                animated_video_clips.append(broll_clips[0]["path"])
+            elif i == 3 and len(broll_clips) > 1:
+                animated_video_clips.append(broll_clips[1]["path"])
+        else:
+            animated_video_clips.append(img_path)
+
+    # 2. Concatenação de todos os blocos de vídeo e mixagem de áudio imersivo
+    concat_txt = os.path.join(work_dir, "scenes_concat.txt")
     with open(concat_txt, "w") as f:
-        for p in scene_images:
+        for p in animated_video_clips:
             escaped = p.replace("\\", "/")
             f.write(f"file '{escaped}'\n")
-            f.write(f"duration {dur_per_scene:.3f}\n")
-        last_scene = scene_images[-1].replace("\\", "/")
-        f.write(f"file '{last_scene}'\n")
 
-    cmd = [
-        "ffmpeg", "-y",
-        "-f", "concat", "-safe", "0",
-        "-i", concat_txt,
-        "-i", audio_path,
-        "-vf", "scale=1920:1080,fps=30",
-        "-c:v", "libx264",
-        "-preset", "veryfast",
-        "-pix_fmt", "yuv420p",
-        "-c:a", "aac",
-        "-b:a", "192k",
-        "-shortest",
-        output_mp4
-    ]
+    bgm_path = os.path.join(PROJECT_ROOT, "assets", "audio", "dark_ambient_drone.wav")
+    if not os.path.exists(bgm_path):
+        try:
+            from src.audio_ambient import ensure_dark_ambient_bgm
+            ensure_dark_ambient_bgm(max(180.0, total_duration + 30.0), bgm_path)
+        except Exception:
+            pass
+
+    if os.path.exists(bgm_path):
+        cmd = [
+            "ffmpeg", "-y",
+            "-f", "concat", "-safe", "0",
+            "-i", concat_txt,
+            "-i", audio_path,
+            "-stream_loop", "-1", "-i", bgm_path,
+            "-filter_complex", "[1:a]volume=1.0[v_aud];[2:a]volume=0.20[b_aud];[v_aud][b_aud]amix=inputs=2:duration=first:dropout_transition=2[aout]",
+            "-map", "0:v",
+            "-map", "[aout]",
+            "-vf", "scale=1920:1080,fps=30",
+            "-c:v", "libx264",
+            "-preset", "veryfast",
+            "-pix_fmt", "yuv420p",
+            "-c:a", "aac",
+            "-b:a", "192k",
+            "-shortest",
+            output_mp4
+        ]
+    else:
+        cmd = [
+            "ffmpeg", "-y",
+            "-f", "concat", "-safe", "0",
+            "-i", concat_txt,
+            "-i", audio_path,
+            "-vf", "scale=1920:1080,fps=30",
+            "-c:v", "libx264",
+            "-preset", "veryfast",
+            "-pix_fmt", "yuv420p",
+            "-c:a", "aac",
+            "-b:a", "192k",
+            "-shortest",
+            output_mp4
+        ]
 
     try:
         res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
