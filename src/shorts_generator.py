@@ -129,7 +129,8 @@ class ShortsGenerator:
                 f.write(f"file '{escaped}'\n")
                 f.write(f"duration {dur_per_scene:.3f}\n")
             # Repetir o último arquivo por convenção do concat demuxer do ffmpeg
-            f.write(f"file '{scene_imgs[-1].replace('\\', '/')}'\n")
+            last_img = scene_imgs[-1].replace("\\", "/")
+            f.write(f"file '{last_img}'\n")
 
         cmd = [
             "ffmpeg", "-y",

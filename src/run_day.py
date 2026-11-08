@@ -113,7 +113,8 @@ def assemble_video_ffmpeg(
             escaped = p.replace("\\", "/")
             f.write(f"file '{escaped}'\n")
             f.write(f"duration {dur_per_scene:.3f}\n")
-        f.write(f"file '{scene_images[-1].replace('\\', '/')}'\n")
+        last_scene = scene_images[-1].replace("\\", "/")
+        f.write(f"file '{last_scene}'\n")
 
     cmd = [
         "ffmpeg", "-y",
