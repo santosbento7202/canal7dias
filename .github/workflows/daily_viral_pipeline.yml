@@ -9,7 +9,7 @@ on:
       day:
         description: 'Dia a ser executado na fila (1 a 7). Deixe vazio para proximo pendente.'
         required: false
-        default: '1'
+        default: ''
       dry_run:
         description: 'Executar em modo dry-run (sem upload real)'
         type: boolean
@@ -66,12 +66,16 @@ jobs:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
         run: |
-          DAY_ARG="${{ github.event.inputs.day || '1' }}"
+          DAY_ARG="${{ github.event.inputs.day }}"
+          DAY_FLAG=""
+          if [ -n "$DAY_ARG" ]; then
+            DAY_FLAG="--day $DAY_ARG"
+          fi
           DRY_RUN_FLAG=""
           if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
             DRY_RUN_FLAG="--dry-run"
           fi
-          python -m src.run_day --day "$DAY_ARG" $DRY_RUN_FLAG
+          python -m src.run_day $DAY_FLAG $DRY_RUN_FLAG
 
       - name: Commit e Push das Atualizacoes de Estado
         if: success() && github.event.inputs.dry_run != 'true'

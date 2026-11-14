@@ -713,17 +713,34 @@ def upload_existing_day_package(day_number: int) -> bool:
     return True
 
 
+def get_next_pending_day(queue: List[Dict[str, Any]]) -> Optional[int]:
+    """Retorna o número do próximo dia cujo status ainda não é 'published'."""
+    for item in queue:
+        if item.get("status") != "published":
+            return int(item["day"])
+    return None
+
+
 def main():
     parser = argparse.ArgumentParser(description="Executa o pipeline do dia especificado para o canal Código Social.")
-    parser.add_argument("--day", type=int, default=1, help="Número do dia (1 a 7)")
+    parser.add_argument("--day", type=int, default=0, help="Número do dia (1 a 7). Omita ou use 0 para executar o próximo dia pendente.")
     parser.add_argument("--dry-run", action="store_true", help="Execução em modo de teste sem publicar")
     parser.add_argument("--upload-only", action="store_true", help="Faz apenas o upload e agendamento dos arquivos já gerados")
     args = parser.parse_args()
 
+    target_day = args.day
+    if target_day <= 0:
+        queue = load_queue()
+        target_day = get_next_pending_day(queue)
+        if target_day is None:
+            print("[AVISO] Todos os dias da fila já constam como 'published'. Nada a executar.")
+            sys.exit(0)
+        print(f"[AUTO-FILA] Próximo dia pendente selecionado automaticamente: Dia {target_day}")
+
     if args.upload_only:
-        success = upload_existing_day_package(args.day)
+        success = upload_existing_day_package(target_day)
     else:
-        success = run_pipeline_for_day(args.day, dry_run=args.dry_run)
+        success = run_pipeline_for_day(target_day, dry_run=args.dry_run)
     sys.exit(0 if success else 1)
 
 
